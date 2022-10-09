@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <groupId>io.tomrss.gluon</groupId>
+        <artifactId>gluon</artifactId>
+        <version>0.1.0</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>gluon-cli</artifactId>
+
+    <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.tomrss.gluon</groupId>
+            <artifactId>gluon-core</artifactId>
+            <version>0.1.0</version>
+        </dependency>
+    </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>appassembler-maven-plugin</artifactId>
+                <version>1.10</version>
+                <executions>
+                    <execution>
+                        <id>assemble-script</id>
+                        <phase>package</phase>
+                        <goals><goal>assemble</goal></goals>
+                        <configuration>
+                            <assembleDirectory>${project.build.directory}/</assembleDirectory>
+                            <binFileExtensions>
+                                <unix>.sh</unix>
+                                <windows>.bat</windows>
+                            </binFileExtensions>
+                            <platforms>
+                                <platform>unix</platform>
+                                <platform>windows</platform>
+                            </platforms>
+                            <programs>
+                                <program>
+                                    <mainClass>io.tomrss.gluon.cli.Main</mainClass>
+                                    <id>gluon</id>
+                                </program>
+                            </programs>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

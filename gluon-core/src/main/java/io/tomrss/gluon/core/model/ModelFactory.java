@@ -1,11 +1,12 @@
 package io.tomrss.gluon.core.model;
 
-import io.tomrss.gluon.core.model.config.EntityConfig;
-import io.tomrss.gluon.core.model.config.FieldConfig;
-import io.tomrss.gluon.core.model.config.IndexConfig;
-import io.tomrss.gluon.core.model.config.RelationConfig;
-import io.tomrss.gluon.core.strategy.PhysicalNamingStrategy;
-import io.tomrss.gluon.core.strategy.SqlTypeTranslationStrategy;
+import io.tomrss.gluon.core.persistence.DatabaseVendor;
+import io.tomrss.gluon.core.persistence.PhysicalNamingStrategy;
+import io.tomrss.gluon.core.persistence.SqlTypeTranslationStrategy;
+import io.tomrss.gluon.core.spec.EntitySpec;
+import io.tomrss.gluon.core.spec.FieldSpec;
+import io.tomrss.gluon.core.spec.IndexSpec;
+import io.tomrss.gluon.core.spec.RelationSpec;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -21,86 +22,90 @@ public class ModelFactory {
     private final Map<String, Entity> entityCache = new ConcurrentHashMap<>();
     private final Map<String, Field> fieldCache = new ConcurrentHashMap<>();
 
+    public ModelFactory(DatabaseVendor databaseVendor) {
+        this(databaseVendor.getPhysicalNamingStrategy(), databaseVendor.getSqlTypeTranslationStrategy());
+    }
+
     public ModelFactory(PhysicalNamingStrategy physicalNamingStrategy, SqlTypeTranslationStrategy sqlTypeTranslationStrategy) {
         this.physicalNamingStrategy = physicalNamingStrategy;
         this.sqlTypeTranslationStrategy = sqlTypeTranslationStrategy;
         this.sqlTypeOfId = getSqlTypeOfId();
     }
 
-    public Entity buildEntity(EntityConfig entityConfig) {
-        return entityCache.computeIfAbsent(entityConfig.name, key -> doBuildEntity(entityConfig));
+    public Entity buildEntity(EntitySpec entitySpec) {
+        return entityCache.computeIfAbsent(entitySpec.name, key -> doBuildEntity(entitySpec));
     }
 
-    private Entity doBuildEntity(EntityConfig entityConfig) {
+    private Entity doBuildEntity(EntitySpec entitySpec) {
         final Entity entity = new Entity();
-        entity.name = entityConfig.name;
-        entity.table = physicalNamingStrategy.table(entityConfig);
-        entity.sequence = physicalNamingStrategy.sequence(entityConfig);
-        entity.sequenceGenerator = physicalNamingStrategy.sequenceGenerator(entityConfig);
-        entity.primaryKeyName = physicalNamingStrategy.primaryKey(entityConfig);
-        entity.resourcePath = physicalNamingStrategy.resourcePath(entityConfig);
+        entity.name = entitySpec.name;
+        entity.table = physicalNamingStrategy.table(entitySpec);
+        entity.sequence = physicalNamingStrategy.sequence(entitySpec);
+        entity.sequenceGenerator = physicalNamingStrategy.sequenceGenerator(entitySpec);
+        entity.primaryKeyName = physicalNamingStrategy.primaryKey(entitySpec);
+        entity.resourcePath = physicalNamingStrategy.resourcePath(entitySpec);
         entity.idSqlType = sqlTypeOfId;
-        entity.fields = entityConfig.fields
+        entity.fields = entitySpec.fields
                 .stream()
-                .map(fieldConfig -> buildField(entityConfig, fieldConfig))
+                .map(fieldSpec -> buildField(entitySpec, fieldSpec))
                 .collect(Collectors.toList());
-        entity.indexes = entityConfig.indexes
+        entity.indexes = entitySpec.indexes
                 .stream()
-                .map(indexConfig -> buildIndex(entityConfig, indexConfig))
+                .map(indexSpec -> buildIndex(entitySpec, indexSpec))
                 .collect(Collectors.toList());
-        entity.relations = entityConfig.relations
+        entity.relations = entitySpec.relations
                 .stream()
-                .map(relationConfig -> buildRelation(entityConfig, relationConfig))
+                .map(relationSpec -> buildRelation(entitySpec, relationSpec))
                 .collect(Collectors.toList());
         return entity;
     }
 
-    private Relation buildRelation(EntityConfig entityConfig, RelationConfig relationConfig) {
+    private Relation buildRelation(EntitySpec entitySpec, RelationSpec relationSpec) {
         final Relation relation = new Relation();
-        relation.name = relationConfig.name;
-        relation.targetEntity = buildEntity(relationConfig.targetEntity);
-        relation.joinColumn = physicalNamingStrategy.joinColumn(relationConfig);
-        relation.inverseJoinColumn = physicalNamingStrategy.inverseJoinColumn(entityConfig, relationConfig);
-        relation.joinTable = physicalNamingStrategy.joinTable(entityConfig, relationConfig);
+        relation.name = relationSpec.name;
+        relation.targetEntity = buildEntity(relationSpec.targetEntity);
+        relation.joinColumn = physicalNamingStrategy.joinColumn(relationSpec);
+        relation.inverseJoinColumn = physicalNamingStrategy.inverseJoinColumn(entitySpec, relationSpec);
+        relation.joinTable = physicalNamingStrategy.joinTable(entitySpec, relationSpec);
         // TODO should be 2 different enums
-        relation.type = relationConfig.type;
+        relation.type = relationSpec.type;
         // FIXME this is obviously wrong, i would like to add a "referencedField" in relation but adds too much hassle
-        relation.inverseJoinColumn = physicalNamingStrategy.table(entityConfig) + "_id";
-        relation.foreignKeyName = physicalNamingStrategy.foreignKey(relationConfig);
-        relation.nullable = relationConfig.nullable;
-        relation.unique = relationConfig.unique;
+        relation.inverseJoinColumn = physicalNamingStrategy.table(entitySpec) + "_id";
+        relation.foreignKeyName = physicalNamingStrategy.foreignKey(relationSpec);
+        relation.nullable = relationSpec.nullable;
+        relation.unique = relationSpec.unique;
         return relation;
     }
 
-    private Index buildIndex(EntityConfig entityConfig, IndexConfig indexConfig) {
+    private Index buildIndex(EntitySpec entitySpec, IndexSpec indexSpec) {
         final Index index = new Index();
-        index.name = physicalNamingStrategy.index(entityConfig, indexConfig);
-        index.unique = indexConfig.unique;
-        index.fields = indexConfig.columns
+        index.name = physicalNamingStrategy.index(entitySpec, indexSpec);
+        index.unique = indexSpec.unique;
+        index.fields = indexSpec.columns
                 .stream()
-                .map(fieldConfig -> buildField(entityConfig, fieldConfig))
+                .map(fieldConfig -> buildField(entitySpec, fieldConfig))
                 .collect(Collectors.toList());
         return index;
     }
 
-    public Field buildField(EntityConfig entityConfig, FieldConfig fieldConfig) {
-        return fieldCache.computeIfAbsent(entityConfig.name + CACHE_KEY_SEPARATOR + fieldConfig.name, key -> doBuildField(fieldConfig));
+    public Field buildField(EntitySpec entitySpec, FieldSpec fieldSpec) {
+        return fieldCache.computeIfAbsent(entitySpec.name + CACHE_KEY_SEPARATOR + fieldSpec.name, key -> doBuildField(fieldSpec));
     }
 
-    public Field doBuildField(FieldConfig fieldConfig) {
+    public Field doBuildField(FieldSpec fieldSpec) {
         final Field field = new Field();
-        field.name = fieldConfig.name;
-        field.type = fieldConfig.type;
-        field.nullable = fieldConfig.nullable;
-        field.unique = fieldConfig.unique;
-        field.length = fieldConfig.length;
-        field.column = physicalNamingStrategy.column(fieldConfig);
-        field.sqlType = sqlTypeTranslationStrategy.sqlType(fieldConfig);
+        field.name = fieldSpec.name;
+        field.type = fieldSpec.type;
+        field.nullable = fieldSpec.nullable;
+        field.unique = fieldSpec.unique;
+        field.length = fieldSpec.length;
+        field.column = physicalNamingStrategy.column(fieldSpec);
+        field.sqlType = sqlTypeTranslationStrategy.sqlType(fieldSpec);
         return field;
     }
 
     private String getSqlTypeOfId() {
-        final FieldConfig fakeIdField_justForTranslatingTheType = new FieldConfig();
+        final FieldSpec fakeIdField_justForTranslatingTheType = new FieldSpec();
         fakeIdField_justForTranslatingTheType.name = "id";
         fakeIdField_justForTranslatingTheType.type = Long.class;
         return sqlTypeTranslationStrategy.sqlType(fakeIdField_justForTranslatingTheType);

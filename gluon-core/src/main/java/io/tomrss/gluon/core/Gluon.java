@@ -3,7 +3,9 @@ package io.tomrss.gluon.core;
 import io.tomrss.gluon.core.model.Entity;
 import io.tomrss.gluon.core.model.Field;
 import io.tomrss.gluon.core.model.ModelFactory;
-import io.tomrss.gluon.core.model.config.EntityConfig;
+import io.tomrss.gluon.core.persistence.DatabaseVendor;
+import io.tomrss.gluon.core.spec.EntitySpec;
+import io.tomrss.gluon.core.spec.EntitySpecReader;
 import io.tomrss.gluon.core.template.TemplateRenderer;
 import org.apache.commons.io.FileUtils;
 
@@ -12,59 +14,65 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 public class Gluon {
-
     public static final String DOMAIN_PACKAGE = "domain";
     public static final String RESOURCE_PACKAGE = "resource";
     public static final String SERVICE_PACKAGE = "service";
 
-    private final ModelFactory modelFactory;
     private final TemplateRenderer templateRenderer;
+    private final DatabaseVendor databaseVendor;
     private final Path generatedProjectPath;
     private final String basePackage;
     private final Path srcDockerPath;
     private final Path srcResourcesPath;
+    private final EntitySpecReader entitySpecReader;
     private final Path basePackagePath;
     private final String groupId;
     private final String artifactId;
 
-    public Gluon(ModelFactory modelFactory,
-                 TemplateRenderer templateRenderer,
+    public Gluon(TemplateRenderer templateRenderer,
+                 DatabaseVendor databaseVendor,
                  Path generatedProjectPath,
                  String basePackage,
                  String groupId,
-                 String artifactId) {
-        this.modelFactory = modelFactory;
+                 String artifactId,
+                 EntitySpecReader entitySpecReader) {
         this.templateRenderer = templateRenderer;
+        this.databaseVendor = databaseVendor;
         this.generatedProjectPath = generatedProjectPath;
         this.basePackage = basePackage;
         this.srcDockerPath = Paths.get(generatedProjectPath.toString(), "src", "main", "docker");
         this.srcResourcesPath = Paths.get(generatedProjectPath.toString(), "src", "main", "resources");
+        this.entitySpecReader = entitySpecReader;
         final Path srcJavaPath = Paths.get(generatedProjectPath.toString(), "src", "main", "java");
         this.basePackagePath = Paths.get(srcJavaPath.toString(), basePackage.split("\\."));
         this.groupId = groupId;
         this.artifactId = artifactId;
     }
 
-    public void generateProject(List<EntityConfig> entityConfigList) throws IOException {
-        final ModelFactory modelFactory = this.modelFactory;
-        final List<Entity> entities = entityConfigList.stream()
-                .map(modelFactory::buildEntity)
-                .toList();
+    public void generateProject() throws IOException {
+        final List<EntitySpec> entitySpecs = entitySpecReader.read();
+        final List<Entity> processedEntities = parseEntitySpecs(entitySpecs);
 
         copyRawFiles();
         generatePom();
         generateProjectStructure();
         generateDocker();
-        generateJava(entities);
-        generateResources(entities);
-        generateTestJava(entities);
+        generateJava(processedEntities);
+        generateResources(processedEntities);
+        generateTestJava(processedEntities);
         generateTestResources();
+    }
+
+    private List<Entity> parseEntitySpecs(List<EntitySpec> entitySpecs) {
+        final ModelFactory modelFactory = new ModelFactory(databaseVendor);
+        return entitySpecs.stream()
+                .map(modelFactory::buildEntity)
+                .toList();
     }
 
     private void generateProjectStructure() throws IOException {
@@ -83,7 +91,8 @@ public class Gluon {
     private void generatePom() throws IOException {
         final Map<String, Object> model = Map.of(
                 "groupId", groupId,
-                "artifactId", artifactId
+                "artifactId", artifactId,
+                "dbKind", databaseVendor.getQuarkusDbKind()
         );
         templateRenderer.templateToFile("pom.xml.ftlh", model, generatedProjectPath.resolve("pom.xml"));
     }
@@ -108,6 +117,7 @@ public class Gluon {
         final Map<String, Object> model = Map.of(
                 "groupId", groupId,
                 "artifactId", artifactId,
+                "dbKind", databaseVendor.getQuarkusDbKind(),
                 "entities", entities
         );
         final Path liquibasePath = srcResourcesPath.resolve("liquibase");

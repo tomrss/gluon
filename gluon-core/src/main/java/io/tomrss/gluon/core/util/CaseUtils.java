@@ -5,6 +5,10 @@ public class CaseUtils {
         return s.replaceAll("([a-z])([A-Z])", "$1_$2").toLowerCase();
     }
 
+    public static String toSnakeCaseUpperCase(String s) {
+        return s.replaceAll("([a-z])([A-Z])", "$1_$2").toUpperCase();
+    }
+
     public static String toHyphenSeparated(String s) {
         return s.replaceAll("([a-z])([A-Z])", "$1-$2").toLowerCase();
     }

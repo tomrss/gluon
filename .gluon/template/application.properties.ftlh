@@ -1,9 +1,10 @@
 quarkus.application.name=${artifactId}
 
-quarkus.datasource.db-kind=postgresql
+quarkus.datasource.db-kind=${dbKind}
 quarkus.datasource.username=gluon_example
 quarkus.datasource.password=gluon_example
-quarkus.datasource.jdbc.url=jdbc:postgresql://localhost:5432/gluon_example
+# TODO warning: change jdbc url probably valid only for postgres
+quarkus.datasource.jdbc.url=jdbc:${dbKind}://localhost:5432/gluon_example
 quarkus.hibernate-orm.database.globally-quoted-identifiers=true
 
 quarkus.liquibase.change-log=liquibase/db-changelog-master.yml

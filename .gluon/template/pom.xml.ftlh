@@ -48,10 +48,12 @@
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-hibernate-orm-panache</artifactId>
     </dependency>
+</#noparse>
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-jdbc-postgresql</artifactId>
+      <artifactId>quarkus-jdbc-${dbKind}</artifactId>
     </dependency>
+<#noparse>
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-liquibase</artifactId>

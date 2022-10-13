@@ -1,24 +1,24 @@
-package io.tomrss.gluon.core.model.config;
+package io.tomrss.gluon.core.spec;
 
-public class FieldConfig {
+public class FieldSpec {
     public String name;
     public Class<?> type;
     public boolean nullable = true;
     public boolean unique = false;
     public int length = 255;
 
-    public FieldConfig() {
+    public FieldSpec() {
     }
 
-    public FieldConfig(String name, Class<?> type) {
+    public FieldSpec(String name, Class<?> type) {
         this(name, type, true, false, 255);
     }
 
-    public FieldConfig(String name, Class<?> type, boolean nullable, boolean unique) {
+    public FieldSpec(String name, Class<?> type, boolean nullable, boolean unique) {
         this(name, type, nullable, unique, 255);
     }
 
-    public FieldConfig(String name, Class<?> type, boolean nullable, boolean unique, int length) {
+    public FieldSpec(String name, Class<?> type, boolean nullable, boolean unique, int length) {
         this.name = name;
         this.type = type;
         this.nullable = nullable;

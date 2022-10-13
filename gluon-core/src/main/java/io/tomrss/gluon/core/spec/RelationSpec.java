@@ -1,22 +1,22 @@
-package io.tomrss.gluon.core.model.config;
+package io.tomrss.gluon.core.spec;
 
 import io.tomrss.gluon.core.model.RelationType;
 
-public class RelationConfig {
+public class RelationSpec {
     public String name;
-    public EntityConfig targetEntity;
+    public EntitySpec targetEntity;
     public RelationType type;
     public boolean nullable = true;
     public boolean unique = false;
 
-    public RelationConfig(String name, EntityConfig targetEntity, RelationType type, boolean nullable, boolean unique) {
+    public RelationSpec(String name, EntitySpec targetEntity, RelationType type, boolean nullable, boolean unique) {
         this.name = name;
         this.targetEntity = targetEntity;
         this.type = type;
         this.nullable = nullable;
         this.unique = unique;
     }
-    public RelationConfig(String name, EntityConfig targetEntity, RelationType type) {
+    public RelationSpec(String name, EntitySpec targetEntity, RelationType type) {
         this(name, targetEntity, type, true, false);
 
     }

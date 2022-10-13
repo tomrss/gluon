@@ -12,23 +12,26 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class FreemarkerTemplateRenderer implements TemplateRenderer {
 
     private final Configuration freemarker;
 
-    public FreemarkerTemplateRenderer(String templateFolder) throws IOException {
+    public FreemarkerTemplateRenderer(String templateFolder) {
         this(new File(templateFolder));
     }
 
-    public FreemarkerTemplateRenderer(Path templateFolder) throws IOException {
+    public FreemarkerTemplateRenderer(Path templateFolder) {
         this(templateFolder.toFile());
     }
 
-    public FreemarkerTemplateRenderer(File templateFolder) throws IOException {
+    public FreemarkerTemplateRenderer(File templateFolder) {
         this.freemarker = new Configuration(Configuration.VERSION_2_3_31);
-        this.freemarker.setDirectoryForTemplateLoading(templateFolder);
+        try {
+            this.freemarker.setDirectoryForTemplateLoading(templateFolder);
+        } catch (IOException e) {
+            throw new RuntimeException(e); // TODO
+        }
         this.freemarker.setDefaultEncoding("UTF-8");
         this.freemarker.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
         this.freemarker.setLogTemplateExceptions(false);

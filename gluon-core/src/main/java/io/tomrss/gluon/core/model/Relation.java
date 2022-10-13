@@ -4,17 +4,18 @@ public class Relation {
     Relation() {
     }
 
-    String fieldName;
+    String name;
     Entity targetEntity;
     RelationType type;
     String joinColumn;
     String inverseJoinColumn;
+    String joinTable;
     String foreignKeyName;
     boolean nullable;
     boolean unique;
 
-    public String getFieldName() {
-        return fieldName;
+    public String getName() {
+        return name;
     }
 
     public Entity getTargetEntity() {
@@ -31,6 +32,10 @@ public class Relation {
 
     public String getInverseJoinColumn() {
         return inverseJoinColumn;
+    }
+
+    public String getJoinTable() {
+        return joinTable;
     }
 
     public String getForeignKeyName() {

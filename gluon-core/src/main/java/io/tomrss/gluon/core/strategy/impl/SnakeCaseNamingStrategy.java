@@ -1,5 +1,7 @@
 package io.tomrss.gluon.core.strategy.impl;
 
+import io.tomrss.gluon.core.model.Index;
+import io.tomrss.gluon.core.model.config.IndexConfig;
 import io.tomrss.gluon.core.model.config.RelationConfig;
 import io.tomrss.gluon.core.util.CaseUtils;
 import io.tomrss.gluon.core.model.config.EntityConfig;
@@ -35,11 +37,26 @@ public class SnakeCaseNamingStrategy implements PhysicalNamingStrategy {
 
     @Override
     public String foreignKey(RelationConfig relation) {
-        return CaseUtils.toSnakeCase(relation.fieldName) + "_fk";
+        return CaseUtils.toSnakeCase(relation.name) + "_fk";
+    }
+
+    @Override
+    public String inverseJoinColumn(EntityConfig entityConfig, RelationConfig relationConfig) {
+        return table(entityConfig) + "_id";
+    }
+
+    @Override
+    public String joinTable(EntityConfig entityConfig, RelationConfig relationConfig) {
+        return table(entityConfig) + "_" + table(relationConfig.targetEntity);
+    }
+
+    @Override
+    public String index(EntityConfig entityConfig, IndexConfig index) {
+        return "idx_" + table(entityConfig) + "_" + index.name;
     }
 
     @Override
     public String joinColumn(RelationConfig relation) {
-        return CaseUtils.toSnakeCase(relation.fieldName) + "_id";
+        return CaseUtils.toSnakeCase(relation.name) + "_id";
     }
 }

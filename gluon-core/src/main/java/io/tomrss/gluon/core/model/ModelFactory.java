@@ -16,6 +16,7 @@ public class ModelFactory {
 
     private final PhysicalNamingStrategy physicalNamingStrategy;
     private final SqlTypeTranslationStrategy sqlTypeTranslationStrategy;
+    private final String sqlTypeOfId;
 
     private final Map<String, Entity> entityCache = new ConcurrentHashMap<>();
     private final Map<String, Field> fieldCache = new ConcurrentHashMap<>();
@@ -23,6 +24,7 @@ public class ModelFactory {
     public ModelFactory(PhysicalNamingStrategy physicalNamingStrategy, SqlTypeTranslationStrategy sqlTypeTranslationStrategy) {
         this.physicalNamingStrategy = physicalNamingStrategy;
         this.sqlTypeTranslationStrategy = sqlTypeTranslationStrategy;
+        this.sqlTypeOfId = getSqlTypeOfId();
     }
 
     public Entity buildEntity(EntityConfig entityConfig) {
@@ -37,13 +39,14 @@ public class ModelFactory {
         entity.sequenceGenerator = physicalNamingStrategy.sequenceGenerator(entityConfig);
         entity.primaryKeyName = physicalNamingStrategy.primaryKey(entityConfig);
         entity.resourcePath = physicalNamingStrategy.resourcePath(entityConfig);
+        entity.idSqlType = sqlTypeOfId;
         entity.fields = entityConfig.fields
                 .stream()
-                .map(fieldConfig -> buildField(entity.name, fieldConfig))
+                .map(fieldConfig -> buildField(entityConfig, fieldConfig))
                 .collect(Collectors.toList());
         entity.indexes = entityConfig.indexes
                 .stream()
-                .map(indexConfig -> buildIndex(entity.name, indexConfig))
+                .map(indexConfig -> buildIndex(entityConfig, indexConfig))
                 .collect(Collectors.toList());
         entity.relations = entityConfig.relations
                 .stream()
@@ -54,29 +57,34 @@ public class ModelFactory {
 
     private Relation buildRelation(EntityConfig entityConfig, RelationConfig relationConfig) {
         final Relation relation = new Relation();
+        relation.name = relationConfig.name;
         relation.targetEntity = buildEntity(relationConfig.targetEntity);
         relation.joinColumn = physicalNamingStrategy.joinColumn(relationConfig);
+        relation.inverseJoinColumn = physicalNamingStrategy.inverseJoinColumn(entityConfig, relationConfig);
+        relation.joinTable = physicalNamingStrategy.joinTable(entityConfig, relationConfig);
         // TODO should be 2 different enums
         relation.type = relationConfig.type;
         // FIXME this is obviously wrong, i would like to add a "referencedField" in relation but adds too much hassle
         relation.inverseJoinColumn = physicalNamingStrategy.table(entityConfig) + "_id";
         relation.foreignKeyName = physicalNamingStrategy.foreignKey(relationConfig);
+        relation.nullable = relationConfig.nullable;
+        relation.unique = relationConfig.unique;
         return relation;
     }
 
-    private Index buildIndex(String entityName, IndexConfig indexConfig) {
+    private Index buildIndex(EntityConfig entityConfig, IndexConfig indexConfig) {
         final Index index = new Index();
-        index.name = indexConfig.name;
+        index.name = physicalNamingStrategy.index(entityConfig, indexConfig);
         index.unique = indexConfig.unique;
         index.fields = indexConfig.columns
                 .stream()
-                .map(fieldConfig -> buildField(entityName, fieldConfig))
+                .map(fieldConfig -> buildField(entityConfig, fieldConfig))
                 .collect(Collectors.toList());
         return index;
     }
 
-    public Field buildField(String entityName, FieldConfig fieldConfig) {
-        return fieldCache.computeIfAbsent(entityName + CACHE_KEY_SEPARATOR + fieldConfig.name, key -> doBuildField(fieldConfig));
+    public Field buildField(EntityConfig entityConfig, FieldConfig fieldConfig) {
+        return fieldCache.computeIfAbsent(entityConfig.name + CACHE_KEY_SEPARATOR + fieldConfig.name, key -> doBuildField(fieldConfig));
     }
 
     public Field doBuildField(FieldConfig fieldConfig) {
@@ -89,5 +97,12 @@ public class ModelFactory {
         field.column = physicalNamingStrategy.column(fieldConfig);
         field.sqlType = sqlTypeTranslationStrategy.sqlType(fieldConfig);
         return field;
+    }
+
+    private String getSqlTypeOfId() {
+        final FieldConfig fakeIdField_justForTranslatingTheType = new FieldConfig();
+        fakeIdField_justForTranslatingTheType.name = "id";
+        fakeIdField_justForTranslatingTheType.type = Long.class;
+        return sqlTypeTranslationStrategy.sqlType(fakeIdField_justForTranslatingTheType);
     }
 }

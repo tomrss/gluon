@@ -16,6 +16,7 @@ public class Entity {
     List<Field> fields;
     List<Relation> relations;
     List<Index> indexes;
+    String idSqlType;
 
     public String getName() {
         return name;
@@ -51,5 +52,9 @@ public class Entity {
 
     public List<Index> getIndexes() {
         return indexes;
+    }
+
+    public String getIdSqlType() {
+        return idSqlType;
     }
 }

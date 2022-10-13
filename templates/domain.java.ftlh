@@ -1,0 +1,55 @@
+package ${basePackage}.domain;
+
+<#list entityFieldImports as import>
+import ${import}
+</#list>
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import javax.persistence.*;
+<#if entity.relations?map(f -> f.type == 'MANY_TO_MANY')?has_content>
+import java.util.Set;
+</#if>
+
+@Entity
+@SequenceGenerator(name = "${entity.sequenceGenerator}", sequenceName = "${entity.sequence}")
+<#if entity.indexes?has_content>
+@Table(
+        name = "${entity.table}",
+        indexes = {
+                <#list entity.indexes as index>
+                @Index(name = "${index.name}", columnList = "${index.fields?map(f -> f.column)?join(',')}"<#if index.unique>, unique = true</#if>)<#if index?index < entity.indexes?size - 1>,</#if>
+                </#list>
+        }
+)
+<#else>
+@Table(name = "${entity.table}")
+</#if>
+public class ${entity.name} extends PanacheEntityBase {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "${entity.sequenceGenerator}")
+    public Long id;
+    <#list entity.fields as field>
+
+    @Column(name = "${field.column}"<#if !field.nullable>, nullable = false</#if><#if field.unique>, unique = true</#if><#if field.length != 255>, length = ${field.length}</#if>)
+    public ${field.type.simpleName} ${field.name};
+    </#list>
+    <#list entity.relations as relation>
+    
+    // TODO fetch type eager is required for now, correct handling of relation is needed
+    <#if relation.type == 'MANY_TO_ONE'>
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "${relation.joinColumn}"<#if !relation.nullable>, nullable = false</#if><#if relation.unique>, unique = true</#if>)
+    public ${relation.targetEntity.name} ${relation.name};
+    <#elseif relation.type == 'ONE_TO_ONE'>
+    @OneToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "${relation.joinColumn}"<#if !relation.nullable>, nullable = false</#if><#if relation.unique>, unique = true</#if>)
+    public ${relation.targetEntity.name} ${relation.name};
+    <#elseif relation.type == 'MANY_TO_MANY'>
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(name = "${entity.table}_${relation.targetEntity.table}",
+               joinColumns = @JoinColumn(name = "${entity.table}_id", referencedColumnName = "id"),
+               inverseJoinColumns = @JoinColumn(name = "${relation.joinColumn}", referencedColumnName = "id"))
+    public Set<${relation.targetEntity.name}> ${relation.name};
+    </#if>
+    </#list>
+}

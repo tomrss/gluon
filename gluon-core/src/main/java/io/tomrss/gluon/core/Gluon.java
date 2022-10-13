@@ -1,6 +1,7 @@
 package io.tomrss.gluon.core;
 
 import io.tomrss.gluon.core.model.Entity;
+import io.tomrss.gluon.core.model.Field;
 import io.tomrss.gluon.core.model.ModelFactory;
 import io.tomrss.gluon.core.model.config.EntityConfig;
 import io.tomrss.gluon.core.template.TemplateRenderer;
@@ -11,8 +12,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class Gluon {
 
@@ -109,8 +112,8 @@ public class Gluon {
         );
         final Path liquibasePath = srcResourcesPath.resolve("liquibase");
         template("application.properties.ftlh", model, srcResourcesPath.resolve("application.properties"));
-        template("db-changelog-master.yaml.ftlh", model, liquibasePath.resolve("db-changelog-master.yaml"));
-        template("init-database.yaml.ftlh", model, liquibasePath.resolve("changes").resolve("init-database.yaml"));
+        template("db-changelog-master.yml.ftlh", model, liquibasePath.resolve("db-changelog-master.yml"));
+        template("init-database.yml.ftlh", model, liquibasePath.resolve("changes").resolve("init-database.yml"));
     }
 
     private void generateTestJava(List<Entity> entities) {
@@ -124,7 +127,13 @@ public class Gluon {
     private void generateSourcesForEntity(Entity entity) throws IOException {
         final Map<String, Object> model = Map.of(
                 "basePackage", basePackage,
-                "entity", entity
+                "entity", entity,
+                "entityFieldImports", entity.getFields()
+                        .stream()
+                        .map(Field::getType)
+                        .map(Class::getName)
+                        .filter(name -> !name.startsWith("java.lang."))
+                        .collect(Collectors.toSet())
         );
         final String name = entity.getName();
         template("domain.java.ftlh", model, basePackagePath.resolve(DOMAIN_PACKAGE).resolve(name + ".java"));

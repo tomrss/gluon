@@ -22,7 +22,7 @@
         <dependency>
             <groupId>io.tomrss.gluon</groupId>
             <artifactId>gluon-core</artifactId>
-            <version>0.1.0</version>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
     <build>

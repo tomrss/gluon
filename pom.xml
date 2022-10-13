@@ -11,7 +11,7 @@
     <modules>
         <module>gluon-core</module>
         <module>gluon-cli</module>
-        <module>gluon-maven-archetype</module>
+        <module>gluon-maven-plugin</module>
     </modules>
 
     <properties>

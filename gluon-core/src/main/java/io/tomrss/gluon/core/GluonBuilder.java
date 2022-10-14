@@ -9,8 +9,10 @@ import io.tomrss.gluon.core.spec.EntitySpec;
 import io.tomrss.gluon.core.spec.EntitySpecReader;
 import io.tomrss.gluon.core.spec.impl.JacksonEntitySpecReader;
 import io.tomrss.gluon.core.spec.impl.MockEntitySpecReader;
-import io.tomrss.gluon.core.template.TemplateRenderer;
+import io.tomrss.gluon.core.template.FileTemplateRenderer;
+import io.tomrss.gluon.core.template.StringTemplateRenderer;
 import io.tomrss.gluon.core.template.impl.FreemarkerTemplateRenderer;
+import io.tomrss.gluon.core.template.impl.StringTemplateRendererImpl;
 import org.apache.commons.io.FileUtils;
 
 import java.io.FileNotFoundException;
@@ -39,7 +41,8 @@ public class GluonBuilder {
             Paths.get(FileUtils.getUserDirectoryPath(), ".gluon", "raw")
     );
 
-    private TemplateRenderer templateRenderer;
+    private FileTemplateRenderer fileTemplateRenderer;
+    private StringTemplateRenderer stringTemplateRender;
     private DatabaseVendor databaseVendor;
     private Path generationDirectory;
     private Path rawFilesDirectory;
@@ -49,12 +52,17 @@ public class GluonBuilder {
     private EntitySpecReader entitySpecReader;
 
     public GluonBuilder defaultTemplateRenderer(Path templateDirectory) {
-        this.templateRenderer = new FreemarkerTemplateRenderer(templateDirectory);
+        this.fileTemplateRenderer = new FreemarkerTemplateRenderer(templateDirectory);
         return this;
     }
 
-    public GluonBuilder templateRenderer(TemplateRenderer templateRenderer) {
-        this.templateRenderer = templateRenderer;
+    public GluonBuilder templateRenderer(FileTemplateRenderer fileTemplateRenderer) {
+        this.fileTemplateRenderer = fileTemplateRenderer;
+        return this;
+    }
+
+    public GluonBuilder stringTemplateRenderer(StringTemplateRenderer stringTemplateRender) {
+        this.stringTemplateRender = stringTemplateRender;
         return this;
     }
 
@@ -131,7 +139,8 @@ public class GluonBuilder {
     public Gluon createGluon() throws FileNotFoundException {
         validateBuild();
         setDefaults();
-        return new Gluon(templateRenderer,
+        return new Gluon(fileTemplateRenderer,
+                stringTemplateRender,
                 databaseVendor,
                 generationDirectory,
                 rawFilesDirectory,
@@ -177,10 +186,13 @@ public class GluonBuilder {
             // default to freemarker renderer in first existing GLUON_TEMPLATE_FOLDERS directory
             rawFilesDirectory = getFirstExistingDirectory("rawFiles", DEFAULT_RAW_FOLDERS);
         }
-        if (templateRenderer == null) {
+        if (fileTemplateRenderer == null) {
             // default to freemarker renderer in first existing GLUON_TEMPLATE_FOLDERS directory
             final Path templateDirectory = getFirstExistingDirectory("template", DEFAULT_TEMPLATE_FOLDERS);
-            templateRenderer = new FreemarkerTemplateRenderer(templateDirectory);
+            fileTemplateRenderer = new FreemarkerTemplateRenderer(templateDirectory);
+        }
+        if (stringTemplateRender == null) {
+            stringTemplateRender = new StringTemplateRendererImpl();
         }
         if (basePackage == null) {
             basePackage = groupId + "." + artifactId.replaceAll("-", "");

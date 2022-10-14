@@ -4,8 +4,8 @@ import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import freemarker.template.TemplateExceptionHandler;
+import io.tomrss.gluon.core.template.FileTemplateRenderer;
 import io.tomrss.gluon.core.template.GluonTemplateException;
-import io.tomrss.gluon.core.template.TemplateRenderer;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -14,7 +14,7 @@ import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public class FreemarkerTemplateRenderer implements TemplateRenderer {
+public class FreemarkerTemplateRenderer implements FileTemplateRenderer {
 
     private final Configuration freemarker;
 
@@ -41,7 +41,7 @@ public class FreemarkerTemplateRenderer implements TemplateRenderer {
     }
 
     @Override
-    public void templateToFile(String templateName, Object model, Path outputFile) throws IOException {
+    public void renderFileTemplate(String templateName, Object model, Path outputFile) throws IOException {
         final Template template = freemarker.getTemplate(templateName);
         Files.createDirectories(outputFile.getParent());
         try (final Writer writer = new FileWriter(outputFile.toFile())) {

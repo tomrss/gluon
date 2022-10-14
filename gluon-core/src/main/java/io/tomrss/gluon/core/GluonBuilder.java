@@ -165,6 +165,7 @@ public class GluonBuilder {
     }
 
     private void setDefaults() throws FileNotFoundException {
+        // TODO default templates from classpath
         if (databaseVendor == null) {
             databaseVendor = DatabaseVendor.POSTGRESQL;
         }

@@ -5,7 +5,7 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
 
 @Mojo(name = "create", requiresProject = false)
-public class CreateMojo extends AbstractMojo {
+public class CreateProjectMojo extends AbstractMojo {
     public void execute() throws MojoExecutionException {
         getLog().info("Hello world");
     }

@@ -1,12 +1,12 @@
 package io.tomrss.gluon.core;
 
-import io.tomrss.gluon.core.model.Entity;
-import io.tomrss.gluon.core.model.Field;
-import io.tomrss.gluon.core.model.ModelFactory;
+import io.tomrss.gluon.core.model.*;
 import io.tomrss.gluon.core.persistence.DatabaseVendor;
 import io.tomrss.gluon.core.spec.EntitySpec;
 import io.tomrss.gluon.core.spec.EntitySpecReader;
+import io.tomrss.gluon.core.spec.ProjectSpec;
 import io.tomrss.gluon.core.template.TemplateRenderer;
+import org.apache.commons.io.FileExistsException;
 import org.apache.commons.io.FileUtils;
 
 import java.io.IOException;
@@ -14,8 +14,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 public class Gluon {
     public static final String DOMAIN_PACKAGE = "domain";
@@ -34,7 +32,7 @@ public class Gluon {
     private final String groupId;
     private final String artifactId;
 
-    public Gluon(TemplateRenderer templateRenderer,
+    Gluon(TemplateRenderer templateRenderer,
                  DatabaseVendor databaseVendor,
                  Path generatedProjectPath,
                  Path rawFilesDirectory,
@@ -42,6 +40,7 @@ public class Gluon {
                  String groupId,
                  String artifactId,
                  EntitySpecReader entitySpecReader) {
+        // TODO just have a project spec here built from builder
         this.templateRenderer = templateRenderer;
         this.databaseVendor = databaseVendor;
         this.generatedProjectPath = generatedProjectPath;
@@ -57,100 +56,48 @@ public class Gluon {
     }
 
     public void generateProject() throws IOException {
+        if (Files.exists(generatedProjectPath)) {
+            throw new FileExistsException("Directory of generated project already exists: " + generatedProjectPath.toAbsolutePath());
+        }
+        Files.createDirectory(generatedProjectPath);
+
         final List<EntitySpec> entitySpecs = entitySpecReader.read();
-        final List<Entity> processedEntities = parseEntitySpecs(entitySpecs);
+
+        final ModelFactory modelFactory = new ModelFactory(new ProjectSpec(groupId, artifactId, basePackage, databaseVendor));
+        final TemplateModel templateModel = modelFactory.buildModelForEntities(entitySpecs);
 
         copyRawFiles();
-        generatePom();
-        generateProjectStructure();
-        generateDocker();
-        generateJava(processedEntities);
-        generateResources(processedEntities);
-        generateTestJava(processedEntities);
-        generateTestResources();
-    }
-
-    private List<Entity> parseEntitySpecs(List<EntitySpec> entitySpecs) {
-        final ModelFactory modelFactory = new ModelFactory(databaseVendor);
-        return entitySpecs.stream()
-                .map(modelFactory::buildEntity)
-                .toList();
-    }
-
-    private void generateProjectStructure() throws IOException {
-        Files.createDirectories(srcDockerPath);
-        Files.createDirectories(srcResourcesPath.resolve("liquibase").resolve("changes"));
-        Files.createDirectories(basePackagePath);
-        Files.createDirectory(basePackagePath.resolve(DOMAIN_PACKAGE));
-        Files.createDirectory(basePackagePath.resolve(RESOURCE_PACKAGE));
-        Files.createDirectory(basePackagePath.resolve(SERVICE_PACKAGE));
+        generateStructuralSources(templateModel.getStructuralModel());
+        generateGlobalSources(templateModel.getGlobalModel());
+        generateEntitySources(templateModel.getEntityModels());
     }
 
     private void copyRawFiles() throws IOException {
         FileUtils.copyDirectory(rawFilesDirectory.toFile(), generatedProjectPath.toFile());
     }
 
-    private void generatePom() throws IOException {
-        final Map<String, Object> model = Map.of(
-                "groupId", groupId,
-                "artifactId", artifactId,
-                "dbKind", databaseVendor.getQuarkusDbKind()
-        );
-        templateRenderer.templateToFile("pom.xml.ftlh", model, generatedProjectPath.resolve("pom.xml"));
-    }
-
-    private void generateDocker() throws IOException {
-        final Map<String, Object> model = Map.of(
-                "artifactId", artifactId
-        );
+    private void generateStructuralSources(StructuralTemplateModel model) throws IOException {
+        template("pom.xml.ftlh", model, generatedProjectPath.resolve("pom.xml"));
         template("Dockerfile.jvm.ftlh", model, srcDockerPath.resolve("Dockerfile.jvm"));
         template("Dockerfile.legacy-jar.ftlh", model, srcDockerPath.resolve("Dockerfile.legacy-jar"));
         template("Dockerfile.native.ftlh", model, srcDockerPath.resolve("Dockerfile.native"));
         template("Dockerfile.native-micro.ftlh", model, srcDockerPath.resolve("Dockerfile.native-micro"));
     }
 
-    private void generateJava(List<Entity> entities) throws IOException {
-        for (Entity entity : entities) {
-            generateSourcesForEntity(entity);
-        }
-    }
-
-    private void generateResources(List<Entity> entities) throws IOException {
-        final Map<String, Object> model = Map.of(
-                "groupId", groupId,
-                "artifactId", artifactId,
-                "dbKind", databaseVendor.getQuarkusDbKind(),
-                "entities", entities
-        );
+    private void generateGlobalSources(GlobalTemplateModel model) throws IOException {
         final Path liquibasePath = srcResourcesPath.resolve("liquibase");
         template("application.properties.ftlh", model, srcResourcesPath.resolve("application.properties"));
         template("db-changelog-master.yml.ftlh", model, liquibasePath.resolve("db-changelog-master.yml"));
         template("init-database.yml.ftlh", model, liquibasePath.resolve("changes").resolve("init-database.yml"));
     }
 
-    private void generateTestJava(List<Entity> entities) {
-        // TODO
-    }
-
-    private void generateTestResources() {
-        // TODO
-    }
-
-    private void generateSourcesForEntity(Entity entity) throws IOException {
-        final Map<String, Object> model = Map.of(
-                "basePackage", basePackage,
-                "entity", entity,
-                "entityFieldImports", entity.getFields()
-                        .stream()
-                        .map(Field::getType)
-                        .map(Class::getName)
-                        .filter(name -> !name.startsWith("java.lang."))
-                        .collect(Collectors.toSet())
-        );
-        final String name = entity.getName();
-        template("domain.java.ftlh", model, basePackagePath.resolve(DOMAIN_PACKAGE).resolve(name + ".java"));
-        template("service.java.ftlh", model, basePackagePath.resolve(SERVICE_PACKAGE).resolve(name + "Service.java"));
-        template("resource.java.ftlh", model, basePackagePath.resolve(RESOURCE_PACKAGE).resolve(name + "Resource.java"));
+    private void generateEntitySources(List<EntityTemplateModel> entityModels) throws IOException {
+        for (EntityTemplateModel model : entityModels) {
+            final String name = model.getEntity().getName();
+            template("domain.java.ftlh", model, basePackagePath.resolve(DOMAIN_PACKAGE).resolve(name + ".java"));
+            template("service.java.ftlh", model, basePackagePath.resolve(SERVICE_PACKAGE).resolve(name + "Service.java"));
+            template("resource.java.ftlh", model, basePackagePath.resolve(RESOURCE_PACKAGE).resolve(name + "Resource.java"));
+        }
     }
 
     private void template(String templateName, Object model, Path path) throws IOException {

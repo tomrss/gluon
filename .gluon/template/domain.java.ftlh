@@ -1,8 +1,5 @@
-package ${basePackage}.domain;
+package ${project.basePackage}.domain;
 
-<#list entityFieldImports as import>
-import ${import}
-</#list>
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import javax.persistence.*;
 <#if entity.relations?map(f -> f.type == 'MANY_TO_MANY')?has_content>
@@ -31,7 +28,7 @@ public class ${entity.name} extends PanacheEntityBase {
     <#list entity.fields as field>
 
     @Column(name = "${field.column}"<#if !field.nullable>, nullable = false</#if><#if field.unique>, unique = true</#if><#if field.length != 255>, length = ${field.length}</#if>)
-    public ${field.type.simpleName} ${field.name};
+    public ${field.type.name?remove_beginning('java.lang.')} ${field.name};
     </#list>
     <#list entity.relations as relation>
     

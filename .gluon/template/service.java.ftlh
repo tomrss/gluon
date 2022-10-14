@@ -1,6 +1,6 @@
-package ${basePackage}.service;
+package ${project.basePackage}.service;
 
-import ${basePackage}.domain.${entity.name};
+import ${project.basePackage}.domain.${entity.name};
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.transaction.Transactional;

@@ -1,13 +1,10 @@
 package io.tomrss.gluon.core.model;
 
-import io.tomrss.gluon.core.persistence.DatabaseVendor;
 import io.tomrss.gluon.core.persistence.PhysicalNamingStrategy;
 import io.tomrss.gluon.core.persistence.SqlTypeTranslationStrategy;
-import io.tomrss.gluon.core.spec.EntitySpec;
-import io.tomrss.gluon.core.spec.FieldSpec;
-import io.tomrss.gluon.core.spec.IndexSpec;
-import io.tomrss.gluon.core.spec.RelationSpec;
+import io.tomrss.gluon.core.spec.*;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -21,15 +18,34 @@ public class ModelFactory {
 
     private final Map<String, Entity> entityCache = new ConcurrentHashMap<>();
     private final Map<String, Field> fieldCache = new ConcurrentHashMap<>();
+    private final ProjectSpec projectSpec;
 
-    public ModelFactory(DatabaseVendor databaseVendor) {
-        this(databaseVendor.getPhysicalNamingStrategy(), databaseVendor.getSqlTypeTranslationStrategy());
+    public ModelFactory(ProjectSpec projectSpec) {
+        this.projectSpec = projectSpec;
+        this.physicalNamingStrategy = projectSpec.databaseVendor.getPhysicalNamingStrategy();
+        this.sqlTypeTranslationStrategy = projectSpec.databaseVendor.getSqlTypeTranslationStrategy();
+        this.sqlTypeOfId = getSqlTypeOfId();
     }
 
-    public ModelFactory(PhysicalNamingStrategy physicalNamingStrategy, SqlTypeTranslationStrategy sqlTypeTranslationStrategy) {
-        this.physicalNamingStrategy = physicalNamingStrategy;
-        this.sqlTypeTranslationStrategy = sqlTypeTranslationStrategy;
-        this.sqlTypeOfId = getSqlTypeOfId();
+    public TemplateModel buildModelForEntities(List<EntitySpec> entitySpecs) {
+        final Project project = new Project();
+        project.groupId = projectSpec.groupId;
+        project.artifactId = projectSpec.artifactId;
+        project.basePackage = projectSpec.basePackage;
+        project.dbVendor = projectSpec.databaseVendor;
+
+        final List<Entity> entities = entitySpecs.stream()
+                .map(this::buildEntity)
+                .toList();
+
+
+        final TemplateModel templateModel = new TemplateModel();
+        templateModel.entityModels = entities.stream()
+                .map(entity -> new EntityTemplateModel(project, entity))
+                .toList();
+        templateModel.globalModel = new GlobalTemplateModel(project, entities);
+        templateModel.structuralModel = new StructuralTemplateModel(project);
+        return templateModel;
     }
 
     public Entity buildEntity(EntitySpec entitySpec) {

@@ -1,7 +1,7 @@
-package ${basePackage}.resource;
+package ${project.basePackage}.resource;
 
-import ${basePackage}.domain.${entity.name};
-import ${basePackage}.service.${entity.name}Service;
+import ${project.basePackage}.domain.${entity.name};
+import ${project.basePackage}.service.${entity.name}Service;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;

@@ -7,11 +7,11 @@
 #
 # Then, build the image with:
 #
-# docker build -f src/main/docker/Dockerfile.native -t quarkus/${artifactId} .
+# docker build -f src/main/docker/Dockerfile.native -t quarkus/${project.artifactId} .
 #
 # Then run the container using:
 #
-# docker run -i --rm -p 8080:8080 quarkus/${artifactId}
+# docker run -i --rm -p 8080:8080 quarkus/${project.artifactId}
 #
 ###
 FROM registry.access.redhat.com/ubi8/ubi-minimal:8.5

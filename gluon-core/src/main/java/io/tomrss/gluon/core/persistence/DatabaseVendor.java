@@ -15,8 +15,11 @@ public enum DatabaseVendor {
     POSTGRESQL(PostgresTypeTranslationStrategy::new, SnakeCaseNamingStrategy::new, "postgresql"),
     ;
 
+    // TODO we need a way to build jdbc url embedded here
+
     private final Supplier<SqlTypeTranslationStrategy> sqlTypeTranslationStrategyFactory;
     private final Supplier<PhysicalNamingStrategy> physicalNamingStrategyFactory;
+    // TODO gluon is now more powerful than just Quarkus scaffolding, so this should be probably handled in different, more general way
     private final String quarkusDbKind;
 
     DatabaseVendor(Supplier<SqlTypeTranslationStrategy> sqlTypeTranslationStrategyFactory, Supplier<PhysicalNamingStrategy> physicalNamingStrategyFactory, String quarkusDbKind) {

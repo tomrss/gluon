@@ -4,39 +4,34 @@ import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import freemarker.template.TemplateExceptionHandler;
-import io.tomrss.gluon.core.template.FileTemplateRenderer;
 import io.tomrss.gluon.core.template.GluonTemplateException;
+import io.tomrss.gluon.core.template.TemplateRenderer;
 
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.nio.file.Path;
 
-public class FreemarkerTemplateRenderer implements FileTemplateRenderer {
+public class FreemarkerTemplateRenderer implements TemplateRenderer {
 
     private final Configuration freemarker;
 
-    public FreemarkerTemplateRenderer(String templateFolder) {
-        this(new File(templateFolder));
-    }
-
-    public FreemarkerTemplateRenderer(Path templateFolder) {
-        this(templateFolder.toFile());
-    }
-
-    public FreemarkerTemplateRenderer(File templateFolder) {
+    public FreemarkerTemplateRenderer() {
         this.freemarker = new Configuration(Configuration.VERSION_2_3_31);
-        try {
-            this.freemarker.setDirectoryForTemplateLoading(templateFolder);
-        } catch (IOException e) {
-            throw new GluonTemplateException("Unable to instance freemarker template renderer", e);
-        }
         this.freemarker.setDefaultEncoding("UTF-8");
         this.freemarker.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
         this.freemarker.setLogTemplateExceptions(false);
         this.freemarker.setWrapUncheckedExceptions(true);
         this.freemarker.setFallbackOnNullLoopVariable(false);
+    }
+
+    @Override
+    public void setTemplateBaseDirectory(Path templateBaseDirectory) {
+        try {
+            this.freemarker.setDirectoryForTemplateLoading(templateBaseDirectory.toFile());
+        } catch (IOException e) {
+            throw new GluonTemplateException("Unable to instance freemarker template renderer", e);
+        }
     }
 
     @Override

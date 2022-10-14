@@ -8,8 +8,8 @@ import io.tomrss.gluon.core.persistence.DatabaseVendor;
 import io.tomrss.gluon.core.spec.EntitySpec;
 import io.tomrss.gluon.core.spec.EntitySpecReader;
 import io.tomrss.gluon.core.spec.ProjectSpec;
-import io.tomrss.gluon.core.template.FileTemplateRenderer;
 import io.tomrss.gluon.core.template.StringTemplateRenderer;
+import io.tomrss.gluon.core.template.TemplateRenderer;
 import io.tomrss.gluon.core.template.impl.StringTemplateRendererImpl;
 import org.apache.commons.io.FileExistsException;
 import org.apache.commons.io.FileUtils;
@@ -23,50 +23,56 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 public class Gluon {
-    public static final String TEMPLATE_EXTENSION = ".gluon";
 
     private static final Predicate<Path> IS_ENTITY_TEMPLATE = path ->
             StringTemplateRendererImpl.ENTITY_TEMPLATE_PATTERN.matcher(path.toString()).find();
 
-    private final FileTemplateRenderer fileTemplateRenderer;
-    private final StringTemplateRenderer stringTemplateRenderer;
-    private final DatabaseVendor databaseVendor;
-    private final Path generatedProjectPath;
+    private final TemplateRenderer templateRenderer;
+    private final Path templateDirectory;
+    private final Path generatedProjectDirectory;
     private final Path rawFilesDirectory;
-    private final String basePackage;
-    private final EntitySpecReader entitySpecReader;
+    private final StringTemplateRenderer stringTemplateRenderer;
     private final String groupId;
     private final String artifactId;
-    private final Path templatePath = Paths.get(".gluon", "template"); // TODO
+    private final String basePackage;
+    private final DatabaseVendor databaseVendor;
+    private final String templateExtension;
+    private final EntitySpecReader entitySpecReader;
 
-    Gluon(FileTemplateRenderer fileTemplateRenderer,
-          DatabaseVendor databaseVendor,
-          Path generatedProjectPath,
+    Gluon(TemplateRenderer templateRenderer,
+          Path templateDirectory,
+          Path generatedProjectDirectory,
           Path rawFilesDirectory,
-          String basePackage,
           String groupId,
           String artifactId,
+          String basePackage,
+          DatabaseVendor databaseVendor,
+          String templateExtension,
           EntitySpecReader entitySpecReader) {
-        // TODO just have a project spec here built from builder
-        this.fileTemplateRenderer = fileTemplateRenderer;
-        this.databaseVendor = databaseVendor;
-        this.generatedProjectPath = generatedProjectPath;
+        this.templateRenderer = templateRenderer;
+        this.templateDirectory = templateDirectory;
+        this.generatedProjectDirectory = generatedProjectDirectory;
         this.rawFilesDirectory = rawFilesDirectory;
-        this.basePackage = basePackage;
-        this.entitySpecReader = entitySpecReader;
         this.groupId = groupId;
         this.artifactId = artifactId;
+        this.basePackage = basePackage;
+        this.databaseVendor = databaseVendor;
+        this.templateExtension = templateExtension;
+        this.entitySpecReader = entitySpecReader;
         // TODO this breaks the dependency inversion principle,
         //  however in current implementation is too dangerous to depend on abstraction
         this.stringTemplateRenderer = new StringTemplateRendererImpl();
+
+        // TODO don't really like this
+        this.templateRenderer.setTemplateBaseDirectory(templateDirectory);
     }
 
     public void generateProject() throws IOException {
-        if (Files.exists(generatedProjectPath)) {
+        if (Files.exists(generatedProjectDirectory)) {
             throw new FileExistsException("Directory of generated project already exists: " +
-                    generatedProjectPath.toAbsolutePath());
+                    generatedProjectDirectory.toAbsolutePath());
         }
-        Files.createDirectory(generatedProjectPath);
+        Files.createDirectory(generatedProjectDirectory);
 
         final List<EntitySpec> entitySpecs = entitySpecReader.read();
 
@@ -84,7 +90,8 @@ public class Gluon {
     }
 
     private void copyRawFiles() throws IOException {
-        FileUtils.copyDirectory(rawFilesDirectory.toFile(), generatedProjectPath.toFile());
+        // TODO apache-commons-io is imported just for this. Rewrite this method and drop apache-commons-io dependency
+        FileUtils.copyDirectory(rawFilesDirectory.toFile(), generatedProjectDirectory.toFile());
     }
 
     private void generateGlobalSources(GlobalTemplateModel model) throws IOException {
@@ -96,6 +103,7 @@ public class Gluon {
 
     private void generateEntitySources(List<EntityTemplateModel> models) throws IOException {
         final List<Path> entityTemplates = listTemplateFiles(IS_ENTITY_TEMPLATE);
+        // TODO ugly but effective nested for loop, keep it?
         for (Path entityTemplate : entityTemplates) {
             for (EntityTemplateModel model : models) {
                 renderTemplate(entityTemplate, model);
@@ -109,15 +117,15 @@ public class Gluon {
         if (parent != null) {
             Files.createDirectories(parent);
         }
-        fileTemplateRenderer.render(templateName.toString(), model, outPath);
+        templateRenderer.render(templateName.toString(), model, outPath);
     }
 
     private List<Path> listTemplateFiles(Predicate<Path> predicate) throws IOException {
-        try (final Stream<Path> templates = Files.walk(templatePath)) {
+        try (final Stream<Path> templates = Files.walk(templateDirectory)) {
             return templates
                     .filter(Files::isRegularFile)
-                    .map(templatePath::relativize)
-                    .filter(f -> f.getFileName().toString().endsWith(TEMPLATE_EXTENSION))
+                    .map(templateDirectory::relativize)
+                    .filter(f -> f.getFileName().toString().endsWith(templateExtension))
                     .filter(predicate)
                     .toList();
         }
@@ -125,7 +133,7 @@ public class Gluon {
 
     private Path resolveDestinationFilePath(Path pathTemplate, Object model) {
         final String resolved = stringTemplateRenderer.render(pathTemplate.toString(), model);
-        final String resolvedWithoutGluonExtension = resolved.substring(0, resolved.lastIndexOf(TEMPLATE_EXTENSION));
-        return Paths.get(generatedProjectPath.toString(), resolvedWithoutGluonExtension);
+        final String resolvedWithoutGluonExtension = resolved.substring(0, resolved.lastIndexOf(templateExtension));
+        return Paths.get(generatedProjectDirectory.toString(), resolvedWithoutGluonExtension);
     }
 }

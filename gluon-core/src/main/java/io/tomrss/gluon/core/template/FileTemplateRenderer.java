@@ -6,13 +6,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public interface FileTemplateRenderer {
-    void renderFileTemplate(String templateName, Object model, Path outputFile) throws IOException;
+    void render(String templateName, Object model, Path outputFile) throws IOException;
 
-    default void renderFileTemplate(String templateName, Object model, String outputFile) throws IOException {
-        renderFileTemplate(templateName, model, Paths.get(outputFile));
+    default void render(String templateName, Object model, String outputFile) throws IOException {
+        render(templateName, model, Paths.get(outputFile));
     }
 
-    default void renderFileTemplate(String templateName, Object model, File outputFile) throws IOException {
-        renderFileTemplate(templateName, model, outputFile.toPath());
+    default void render(String templateName, Object model, File outputFile) throws IOException {
+        render(templateName, model, outputFile.toPath());
     }
 }

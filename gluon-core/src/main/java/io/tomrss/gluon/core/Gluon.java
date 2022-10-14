@@ -10,6 +10,7 @@ import io.tomrss.gluon.core.spec.EntitySpecReader;
 import io.tomrss.gluon.core.spec.ProjectSpec;
 import io.tomrss.gluon.core.template.FileTemplateRenderer;
 import io.tomrss.gluon.core.template.StringTemplateRenderer;
+import io.tomrss.gluon.core.template.impl.StringTemplateRendererImpl;
 import org.apache.commons.io.FileExistsException;
 import org.apache.commons.io.FileUtils;
 
@@ -19,18 +20,16 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.function.Predicate;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 public class Gluon {
-    //TODO using different impl of StringTemplateRender will break this regex!
-    public static final Pattern ENTITY_TEMPLATE_PATTERN = Pattern.compile("\\{\\{entity(\\..+)?}}");
-    private static final Predicate<Path> IS_ENTITY_TEMPLATE = path -> ENTITY_TEMPLATE_PATTERN.matcher(path.toString()).find();
-
     public static final String TEMPLATE_EXTENSION = ".gluon";
 
+    private static final Predicate<Path> IS_ENTITY_TEMPLATE = path ->
+            StringTemplateRendererImpl.ENTITY_TEMPLATE_PATTERN.matcher(path.toString()).find();
+
     private final FileTemplateRenderer fileTemplateRenderer;
-    private final StringTemplateRenderer stringTemplateRender;
+    private final StringTemplateRenderer stringTemplateRenderer;
     private final DatabaseVendor databaseVendor;
     private final Path generatedProjectPath;
     private final Path rawFilesDirectory;
@@ -41,7 +40,6 @@ public class Gluon {
     private final Path templatePath = Paths.get(".gluon", "template"); // TODO
 
     Gluon(FileTemplateRenderer fileTemplateRenderer,
-          StringTemplateRenderer stringTemplateRender,
           DatabaseVendor databaseVendor,
           Path generatedProjectPath,
           Path rawFilesDirectory,
@@ -51,7 +49,6 @@ public class Gluon {
           EntitySpecReader entitySpecReader) {
         // TODO just have a project spec here built from builder
         this.fileTemplateRenderer = fileTemplateRenderer;
-        this.stringTemplateRender = stringTemplateRender;
         this.databaseVendor = databaseVendor;
         this.generatedProjectPath = generatedProjectPath;
         this.rawFilesDirectory = rawFilesDirectory;
@@ -59,6 +56,9 @@ public class Gluon {
         this.entitySpecReader = entitySpecReader;
         this.groupId = groupId;
         this.artifactId = artifactId;
+        // TODO this breaks the dependency inversion principle,
+        //  however in current implementation is too dangerous to depend on abstraction
+        this.stringTemplateRenderer = new StringTemplateRendererImpl();
     }
 
     public void generateProject() throws IOException {
@@ -109,7 +109,7 @@ public class Gluon {
         if (parent != null) {
             Files.createDirectories(parent);
         }
-        fileTemplateRenderer.renderFileTemplate(templateName.toString(), model, outPath);
+        fileTemplateRenderer.render(templateName.toString(), model, outPath);
     }
 
     private List<Path> listTemplateFiles(Predicate<Path> predicate) throws IOException {
@@ -124,7 +124,7 @@ public class Gluon {
     }
 
     private Path resolveDestinationFilePath(Path pathTemplate, Object model) {
-        final String resolved = stringTemplateRender.renderStringTemplate(pathTemplate.toString(), model);
+        final String resolved = stringTemplateRenderer.render(pathTemplate.toString(), model);
         final String resolvedWithoutGluonExtension = resolved.substring(0, resolved.lastIndexOf(TEMPLATE_EXTENSION));
         return Paths.get(generatedProjectPath.toString(), resolvedWithoutGluonExtension);
     }

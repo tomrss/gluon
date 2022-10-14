@@ -11,29 +11,18 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class StringTemplateRendererImpl implements StringTemplateRenderer {
-    private final Pattern templateVariablePattern;
-    private final String propertyPathSeparatorPattern;
-
-    public StringTemplateRendererImpl() {
-        this(Pattern.compile("\\{\\{([a-zA-Z_.-]+)}}"), "\\.");
-    }
-
-    public StringTemplateRendererImpl(String templateVariablePattern, String propertyPathSeparatorPattern) {
-        this(Pattern.compile(templateVariablePattern), propertyPathSeparatorPattern);
-    }
-
-    public StringTemplateRendererImpl(Pattern templateVariablePattern, String propertyPathSeparatorPattern) {
-        this.templateVariablePattern = templateVariablePattern;
-        this.propertyPathSeparatorPattern = propertyPathSeparatorPattern;
-    }
+    public static final Pattern TEMPLATE_VARIABLE_PATTERN = Pattern.compile("\\{\\{([a-zA-Z_.-]+)}}");
+    public static final String PROPERTY_PATH_SEPARATOR = "\\.";
+    //TODO using different impl of StringTemplateRender will break this regex!
+    public static final Pattern ENTITY_TEMPLATE_PATTERN = Pattern.compile("\\{\\{entity(\\..+)?}}");
 
     @Override
-    public String renderStringTemplate(String stringTemplate, Object model) {
-        final Matcher m = templateVariablePattern.matcher(stringTemplate);
+    public String render(String stringTemplate, Object model) {
+        final Matcher m = TEMPLATE_VARIABLE_PATTERN.matcher(stringTemplate);
         final StringBuilder sb = new StringBuilder();
         while (m.find()) {
             final String templateVariable = m.group(1);
-            final String[] propertyPath = templateVariable.split(propertyPathSeparatorPattern);
+            final String[] propertyPath = templateVariable.split(PROPERTY_PATH_SEPARATOR);
             final String resolvedVariableValue = resolvePathTemplateVariableValue(templateVariable, propertyPath, model);
             m.appendReplacement(sb, resolvedVariableValue);
         }

@@ -40,7 +40,7 @@ public class FreemarkerTemplateRenderer implements FileTemplateRenderer {
     }
 
     @Override
-    public void renderFileTemplate(String templateName, Object model, Path outputFile) throws IOException {
+    public void render(String templateName, Object model, Path outputFile) throws IOException {
         final Template template = freemarker.getTemplate(templateName);
         try (final Writer writer = new FileWriter(outputFile.toFile())) {
             template.process(model, writer);

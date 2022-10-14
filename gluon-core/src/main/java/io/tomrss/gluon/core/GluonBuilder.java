@@ -34,10 +34,15 @@ public class GluonBuilder {
             Paths.get(".gluon", "template"),
             Paths.get(FileUtils.getUserDirectoryPath(), ".gluon", "template")
     );
+    public static final List<Path> DEFAULT_RAW_FOLDERS = List.of(
+            Paths.get(".gluon", "raw"),
+            Paths.get(FileUtils.getUserDirectoryPath(), ".gluon", "raw")
+    );
 
     private TemplateRenderer templateRenderer;
     private DatabaseVendor databaseVendor;
     private Path generationDirectory;
+    private Path rawFilesDirectory;
     private String basePackage;
     private String groupId;
     private String artifactId;
@@ -60,6 +65,11 @@ public class GluonBuilder {
 
     public GluonBuilder generationDirectory(Path generationDirectory) {
         this.generationDirectory = generationDirectory;
+        return this;
+    }
+
+    public GluonBuilder rawFilesDirectory(Path rawFilesDirectory) {
+        this.rawFilesDirectory = rawFilesDirectory;
         return this;
     }
 
@@ -124,6 +134,7 @@ public class GluonBuilder {
         return new Gluon(templateRenderer,
                 databaseVendor,
                 generationDirectory,
+                rawFilesDirectory,
                 basePackage,
                 groupId,
                 artifactId,
@@ -160,6 +171,10 @@ public class GluonBuilder {
         if (generationDirectory == null) {
             // use artifactId relative path as default for generation directory
             this.generationDirectory = Paths.get(artifactId);
+        }
+        if (rawFilesDirectory == null) {
+            // default to freemarker renderer in first existing GLUON_TEMPLATE_FOLDERS directory
+            rawFilesDirectory = getFirstExistingDirectory("rawFiles", DEFAULT_RAW_FOLDERS);
         }
         if (templateRenderer == null) {
             // default to freemarker renderer in first existing GLUON_TEMPLATE_FOLDERS directory

@@ -20,14 +20,14 @@ public class Main {
 
         // TODO temp code, just for trying gluon...
 
-        final Path generatedProjectDirectory = Paths.get("../example-gluon");
+        final Path generatedProjectDirectory = Paths.get("../example");
         final Path templateDirectory = Paths.get("templates");
 
         final Gluon gluon = new GluonBuilder()
                 // .defaultTemplateRenderer(templateDirectory)
                 .generationDirectory(generatedProjectDirectory)
-                .groupId("io.tomrss")
-                .artifactId("example-gluon")
+                .groupId("io.tomrss.gluon")
+                .artifactId("example")
                 .mockEntities(mockEntities())
                 .createGluon();
 

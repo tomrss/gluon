@@ -9,7 +9,6 @@ import io.tomrss.gluon.core.spec.EntitySpecReader;
 import io.tomrss.gluon.core.template.TemplateRenderer;
 import org.apache.commons.io.FileUtils;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -26,6 +25,7 @@ public class Gluon {
     private final TemplateRenderer templateRenderer;
     private final DatabaseVendor databaseVendor;
     private final Path generatedProjectPath;
+    private final Path rawFilesDirectory;
     private final String basePackage;
     private final Path srcDockerPath;
     private final Path srcResourcesPath;
@@ -37,6 +37,7 @@ public class Gluon {
     public Gluon(TemplateRenderer templateRenderer,
                  DatabaseVendor databaseVendor,
                  Path generatedProjectPath,
+                 Path rawFilesDirectory,
                  String basePackage,
                  String groupId,
                  String artifactId,
@@ -44,6 +45,7 @@ public class Gluon {
         this.templateRenderer = templateRenderer;
         this.databaseVendor = databaseVendor;
         this.generatedProjectPath = generatedProjectPath;
+        this.rawFilesDirectory = rawFilesDirectory;
         this.basePackage = basePackage;
         this.srcDockerPath = Paths.get(generatedProjectPath.toString(), "src", "main", "docker");
         this.srcResourcesPath = Paths.get(generatedProjectPath.toString(), "src", "main", "resources");
@@ -85,7 +87,7 @@ public class Gluon {
     }
 
     private void copyRawFiles() throws IOException {
-        FileUtils.copyDirectory(new File("raw"), generatedProjectPath.toFile());
+        FileUtils.copyDirectory(rawFilesDirectory.toFile(), generatedProjectPath.toFile());
     }
 
     private void generatePom() throws IOException {

@@ -27,7 +27,7 @@ public class ${entity.name} extends PanacheEntityBase {
     public Long id;
     <#list entity.fields as field>
 
-    @Column(name = "${field.column}"<#if !field.nullable>, nullable = false</#if><#if field.unique>, unique = true</#if><#if field.length != 255>, length = ${field.length}</#if>)
+    @Column(name = "${field.column}"<#if !field.nullable>, nullable = false</#if><#if field.unique>, unique = true</#if><#if field.length != 255 && field.length != 0>, length = ${field.length}</#if>)
     public ${field.type.name?remove_beginning('java.lang.')} ${field.name};
     </#list>
     <#list entity.relations as relation>

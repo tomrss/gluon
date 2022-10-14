@@ -15,6 +15,8 @@ import java.util.stream.Collectors;
 public class ModelFactory {
     // TODO code in this class is far from clean, needs refactor
 
+    // TODO handle defaults
+
     private final ProjectSpec projectSpec;
     private final PhysicalNamingStrategy physicalNamingStrategy;
     private final SqlTypeTranslationStrategy sqlTypeTranslationStrategy;

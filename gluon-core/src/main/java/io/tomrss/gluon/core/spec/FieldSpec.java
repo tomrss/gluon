@@ -8,10 +8,10 @@ public record FieldSpec(
         int length
 ) {
     public FieldSpec(String name, Class<?> type) {
-        this(name, type, true, false, 255);
+        this(name, type, true, false, 0);
     }
 
     public FieldSpec(String name, Class<?> type, boolean nullable, boolean unique) {
-        this(name, type, nullable, unique, 255);
+        this(name, type, nullable, unique, 0);
     }
 }

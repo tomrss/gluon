@@ -26,7 +26,6 @@ public class Main {
                 .generationDirectory(generatedProjectDirectory)
                 .groupId("io.tomrss.gluon")
                 .artifactId("example")
-                .mockEntities(mockEntities())
                 .createGluon();
 
         FileUtils.deleteDirectory(generatedProjectDirectory.toFile());

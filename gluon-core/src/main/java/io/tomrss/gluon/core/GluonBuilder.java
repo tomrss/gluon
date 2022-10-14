@@ -57,7 +57,7 @@ public class GluonBuilder {
         return this;
     }
 
-    public GluonBuilder templateRenderer(Path templateDirectory) {
+    public GluonBuilder templateDirectory(Path templateDirectory) {
         this.templateDirectory = templateDirectory;
         return this;
     }

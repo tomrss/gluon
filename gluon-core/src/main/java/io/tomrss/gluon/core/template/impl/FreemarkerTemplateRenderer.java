@@ -11,7 +11,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
-import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class FreemarkerTemplateRenderer implements FileTemplateRenderer {
@@ -43,7 +42,6 @@ public class FreemarkerTemplateRenderer implements FileTemplateRenderer {
     @Override
     public void renderFileTemplate(String templateName, Object model, Path outputFile) throws IOException {
         final Template template = freemarker.getTemplate(templateName);
-        Files.createDirectories(outputFile.getParent());
         try (final Writer writer = new FileWriter(outputFile.toFile())) {
             template.process(model, writer);
             System.out.println("Template " + templateName + " rendered to file " + outputFile);

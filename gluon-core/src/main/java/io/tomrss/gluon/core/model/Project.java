@@ -6,10 +6,10 @@ public class Project {
     Project() {
     }
 
-
     String groupId;
     String artifactId;
     String basePackage;
+    String basePackagePath;
     DatabaseVendor dbVendor;
 
     public String getGroupId() {
@@ -22,6 +22,10 @@ public class Project {
 
     public String getBasePackage() {
         return basePackage;
+    }
+
+    public String getBasePackagePath() {
+        return basePackagePath;
     }
 
     public DatabaseVendor getDbVendor() {

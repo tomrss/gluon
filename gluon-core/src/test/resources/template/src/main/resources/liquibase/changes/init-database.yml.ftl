@@ -1,0 +1,92 @@
+databaseChangeLog:
+<#list entities as entity>
+- changeSet:
+    id: create-table-${entity.table}
+    author: gluon
+    changes:
+    - createSequence:
+        sequenceName: ${entity.sequence}
+        incrementBy: 50
+    - createTable:
+        tableName: ${entity.table}
+        columns:
+        - column:
+            name: id
+            type: ${entity.idSqlType}
+            valueSequenceNext: ${entity.sequence}
+            constraints:
+                nullable: false
+                unique: true
+                primaryKey: true
+                primaryKeyName: ${entity.primaryKeyName}
+        <#list entity.fields as field>
+        - column:
+            name: ${field.column}
+            type: ${field.sqlType}
+            <#if !field.nullable || field.unique>
+            constraints:
+              nullable: ${field.nullable?then('true', 'false')}
+              unique: ${field.unique?then('true', 'false')}
+            </#if>
+        </#list>
+        <#list entity.relations?filter(r -> r.type != 'MANY_TO_MANY') as relation>
+        - column:
+            name: ${relation.joinColumn}
+            type: ${entity.idSqlType}
+            constraints:
+              foreignKeyName: ${relation.foreignKeyName}
+              references: ${relation.targetEntity.table}(id)
+              nullable: ${relation.nullable?then('true', 'false')}
+              unique: ${relation.unique?then('true', 'false')}
+        </#list>
+    <#list entity.indexes as index>
+    - createIndex:
+        columns:
+        <#list index.fields as field>
+        - column:
+           name: ${field.column}
+        </#list>
+        indexName: ${index.name}
+        tableName: ${entity.table}
+        unique: ${index.unique?then('true', 'false')}
+    </#list>
+</#list>
+
+<#list entities as entity>
+<#list entity.relations?filter(r -> r.type == 'MANY_TO_MANY') as relation>
+<#assign sequence = entity.sequence + '_' + relation.targetEntity.sequence>
+<#assign pk = entity.primaryKeyName + '_' +relation.targetEntity.primaryKeyName>
+- changeSet:
+    id: create-join-table-${entity.table}-${relation.targetEntity.table}
+    author: gluon
+    changes:
+    - createSequence:
+        # TODO this is ugly:
+        sequenceName: ${sequence}
+        incrementBy: 50
+    - createTable:
+        tableName: ${relation.joinTable}
+        columns:
+        - column:
+            name: ${relation.inverseJoinColumn}
+            type: ${entity.idSqlType}
+            constraints:
+              nullable: false
+              unique: false
+              # TODO awful
+              foreignKeyName: ${entity.primaryKeyName}
+              references: ${entity.table}(id)
+        - column:
+            name: ${relation.joinColumn}
+            type: ${entity.idSqlType}
+            constraints:
+              nullable: false
+              unique: false
+              foreignKeyName: ${relation.foreignKeyName}
+              references: ${relation.targetEntity.table}(id)
+    - addPrimaryKey:
+        tableName: ${relation.joinTable}
+        columnNames: ${relation.inverseJoinColumn},${relation.joinColumn}
+        constraintName: ${pk}
+</#list>
+</#list>

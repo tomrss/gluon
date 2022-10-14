@@ -4,6 +4,7 @@ import io.tomrss.gluon.core.persistence.PhysicalNamingStrategy;
 import io.tomrss.gluon.core.persistence.SqlTypeTranslationStrategy;
 import io.tomrss.gluon.core.spec.*;
 
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -32,6 +33,7 @@ public class ModelFactory {
         project.groupId = projectSpec.groupId;
         project.artifactId = projectSpec.artifactId;
         project.basePackage = projectSpec.basePackage;
+        project.basePackagePath = Paths.get("", project.basePackage.split("\\.")).toString();
         project.dbVendor = projectSpec.databaseVendor;
 
         final List<Entity> entities = entitySpecs.stream()
@@ -44,7 +46,6 @@ public class ModelFactory {
                 .map(entity -> new EntityTemplateModel(project, entity))
                 .toList();
         templateModel.globalModel = new GlobalTemplateModel(project, entities);
-        templateModel.structuralModel = new StructuralTemplateModel(project);
         return templateModel;
     }
 

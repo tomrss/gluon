@@ -30,7 +30,7 @@ public class FreemarkerTemplateRenderer implements FileTemplateRenderer {
         try {
             this.freemarker.setDirectoryForTemplateLoading(templateFolder);
         } catch (IOException e) {
-            throw new RuntimeException(e); // TODO
+            throw new GluonTemplateException("Unable to instance freemarker template renderer", e);
         }
         this.freemarker.setDefaultEncoding("UTF-8");
         this.freemarker.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);

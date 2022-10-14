@@ -4,7 +4,6 @@ import io.tomrss.gluon.core.model.EntityTemplateModel;
 import io.tomrss.gluon.core.model.GlobalTemplateModel;
 import io.tomrss.gluon.core.model.ModelFactory;
 import io.tomrss.gluon.core.model.TemplateModel;
-import io.tomrss.gluon.core.persistence.DatabaseVendor;
 import io.tomrss.gluon.core.spec.EntitySpec;
 import io.tomrss.gluon.core.spec.EntitySpecReader;
 import io.tomrss.gluon.core.spec.ProjectSpec;
@@ -29,35 +28,25 @@ public class Gluon {
 
     private final TemplateRenderer templateRenderer;
     private final Path templateDirectory;
-    private final Path generatedProjectDirectory;
+    private final Path projectDirectory;
     private final Path rawFilesDirectory;
+    private final ProjectSpec projectSpec;
     private final StringTemplateRenderer stringTemplateRenderer;
-    private final String groupId;
-    private final String artifactId;
-    private final String basePackage;
-    private final DatabaseVendor databaseVendor;
     private final String templateExtension;
     private final EntitySpecReader entitySpecReader;
 
-    @SuppressWarnings("java:S107") // this is called only by factory, so it's not a problem
     Gluon(TemplateRenderer templateRenderer,
           Path templateDirectory,
-          Path generatedProjectDirectory,
+          Path projectDirectory,
           Path rawFilesDirectory,
-          String groupId,
-          String artifactId,
-          String basePackage,
-          DatabaseVendor databaseVendor,
+          ProjectSpec projectSpec,
           String templateExtension,
           EntitySpecReader entitySpecReader) {
         this.templateRenderer = templateRenderer;
         this.templateDirectory = templateDirectory;
-        this.generatedProjectDirectory = generatedProjectDirectory;
+        this.projectDirectory = projectDirectory;
         this.rawFilesDirectory = rawFilesDirectory;
-        this.groupId = groupId;
-        this.artifactId = artifactId;
-        this.basePackage = basePackage;
-        this.databaseVendor = databaseVendor;
+        this.projectSpec = projectSpec;
         this.templateExtension = templateExtension;
         this.entitySpecReader = entitySpecReader;
         // TODO this breaks the dependency inversion principle,
@@ -69,15 +58,14 @@ public class Gluon {
     }
 
     public void generateProject() throws IOException {
-        if (Files.exists(generatedProjectDirectory)) {
+        if (Files.exists(projectDirectory)) {
             throw new FileExistsException("Directory of generated project already exists: " +
-                    generatedProjectDirectory.toAbsolutePath());
+                    projectDirectory.toAbsolutePath());
         }
-        Files.createDirectory(generatedProjectDirectory);
+        Files.createDirectory(projectDirectory);
 
         final List<EntitySpec> entitySpecs = entitySpecReader.read();
 
-        final ProjectSpec projectSpec = new ProjectSpec(groupId, artifactId, basePackage, databaseVendor);
         final ModelFactory modelFactory = new ModelFactory(projectSpec);
         final TemplateModel templateModel = modelFactory.buildModelForEntities(entitySpecs);
 
@@ -92,7 +80,7 @@ public class Gluon {
 
     private void copyRawFiles() throws IOException {
         // TODO apache-commons-io is imported just for this. Rewrite this method and drop apache-commons-io dependency
-        FileUtils.copyDirectory(rawFilesDirectory.toFile(), generatedProjectDirectory.toFile());
+        FileUtils.copyDirectory(rawFilesDirectory.toFile(), projectDirectory.toFile());
     }
 
     private void generateGlobalSources(GlobalTemplateModel model) throws IOException {
@@ -135,6 +123,6 @@ public class Gluon {
     private Path resolveDestinationFilePath(Path pathTemplate, Object model) {
         final String resolved = stringTemplateRenderer.render(pathTemplate.toString(), model);
         final String resolvedWithoutGluonExtension = resolved.substring(0, resolved.lastIndexOf(templateExtension));
-        return Paths.get(generatedProjectDirectory.toString(), resolvedWithoutGluonExtension);
+        return Paths.get(projectDirectory.toString(), resolvedWithoutGluonExtension);
     }
 }

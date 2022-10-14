@@ -23,7 +23,7 @@ public class Main {
         final Path generatedProjectDirectory = Paths.get("../example");
 
         final Gluon gluon = new GluonBuilder()
-                .generationDirectory(generatedProjectDirectory)
+                .projectDirectory(generatedProjectDirectory)
                 .groupId("io.tomrss.gluon")
                 .artifactId("example")
                 .createGluon();

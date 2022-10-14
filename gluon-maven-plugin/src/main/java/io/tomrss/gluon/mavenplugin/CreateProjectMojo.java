@@ -29,8 +29,8 @@ public class CreateProjectMojo extends AbstractMojo {
     @Parameter(property = "templateDirectory")
     private String templateDirectory;
 
-    @Parameter(property = "generationDirectory")
-    private String generationDirectory;
+    @Parameter(property = "projectDirectory")
+    private String projectDirectory;
 
     @Parameter(property = "rawFilesDirectory")
     private String rawFilesDirectory;
@@ -50,9 +50,10 @@ public class CreateProjectMojo extends AbstractMojo {
 
             Optional.ofNullable(templateDirectory).map(Paths::get).ifPresent(gluonBuilder::templateDirectory);
             Optional.ofNullable(rawFilesDirectory).map(Paths::get).ifPresent(gluonBuilder::rawFilesDirectory);
-            Optional.ofNullable(generationDirectory).map(Paths::get).ifPresent(gluonBuilder::generationDirectory);
+            Optional.ofNullable(projectDirectory).map(Paths::get).ifPresent(gluonBuilder::projectDirectory);
             Optional.ofNullable(projectGroupId).ifPresent(gluonBuilder::groupId);
             Optional.ofNullable(projectArtifactId).ifPresent(gluonBuilder::artifactId);
+            Optional.ofNullable(projectVersion).ifPresent(gluonBuilder::version);
             Optional.ofNullable(basePackage).ifPresent(gluonBuilder::basePackage);
             Optional.ofNullable(databaseVendor).map(DatabaseVendor::valueOf).ifPresent(gluonBuilder::databaseVendor);
             Optional.ofNullable(templateExtension).ifPresent(gluonBuilder::templateExtension);

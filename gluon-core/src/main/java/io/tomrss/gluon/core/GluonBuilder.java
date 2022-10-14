@@ -7,6 +7,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import io.tomrss.gluon.core.persistence.DatabaseVendor;
 import io.tomrss.gluon.core.spec.EntitySpec;
 import io.tomrss.gluon.core.spec.EntitySpecReader;
+import io.tomrss.gluon.core.spec.ProjectSpec;
 import io.tomrss.gluon.core.spec.impl.JacksonEntitySpecReader;
 import io.tomrss.gluon.core.spec.impl.MockEntitySpecReader;
 import io.tomrss.gluon.core.template.TemplateRenderer;
@@ -43,11 +44,12 @@ public class GluonBuilder {
 
     private TemplateRenderer templateRenderer;
     private Path templateDirectory;
-    private Path generationDirectory;
+    private Path projectDirectory;
     private Path rawFilesDirectory;
     private String basePackage;
     private String groupId;
     private String artifactId;
+    private String version;
     private DatabaseVendor databaseVendor;
     private String templateExtension;
     private EntitySpecReader entitySpecReader;
@@ -62,8 +64,8 @@ public class GluonBuilder {
         return this;
     }
 
-    public GluonBuilder generationDirectory(Path generationDirectory) {
-        this.generationDirectory = generationDirectory;
+    public GluonBuilder projectDirectory(Path projectDirectory) {
+        this.projectDirectory = projectDirectory;
         return this;
     }
 
@@ -79,6 +81,11 @@ public class GluonBuilder {
 
     public GluonBuilder artifactId(String artifactId) {
         this.artifactId = artifactId;
+        return this;
+    }
+
+    public GluonBuilder version(String version) {
+        this.version = version;
         return this;
     }
 
@@ -142,12 +149,9 @@ public class GluonBuilder {
         setDefaults();
         return new Gluon(templateRenderer,
                 templateDirectory,
-                generationDirectory,
+                projectDirectory,
                 rawFilesDirectory,
-                groupId,
-                artifactId,
-                basePackage,
-                databaseVendor,
+                new ProjectSpec(groupId, artifactId, version, basePackage, databaseVendor),
                 templateExtension,
                 entitySpecReader);
     }
@@ -183,12 +187,15 @@ public class GluonBuilder {
             // TODO if this does not exist, default templates should be in jar and loaded from resources?
             templateDirectory = getFirstExistingDirectory("template", DEFAULT_TEMPLATE_FOLDERS);
         }
-        if (generationDirectory == null) {
+        if (projectDirectory == null) {
             // use artifactId relative path as default for generation directory
-            generationDirectory = Paths.get(artifactId);
+            projectDirectory = Paths.get(artifactId);
         }
         if (rawFilesDirectory == null) {
             rawFilesDirectory = getFirstExistingDirectory("rawFiles", DEFAULT_RAW_FOLDERS);
+        }
+        if (version == null) {
+            version = "0.1.0";
         }
         if (basePackage == null) {
             basePackage = groupId + "." + artifactId.replace("-", "");

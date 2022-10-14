@@ -4,7 +4,7 @@ import java.util.List;
 
 public record IndexSpec(
         String name,
-        List<FieldSpec> columns,
+        List<String> fields,
         boolean unique
 ) {
     // TODO index could be also on relation...

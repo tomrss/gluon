@@ -1,33 +1,30 @@
 package io.tomrss.gluon.core.persistence;
 
-import io.tomrss.gluon.core.spec.EntitySpec;
-import io.tomrss.gluon.core.spec.FieldSpec;
-import io.tomrss.gluon.core.spec.IndexSpec;
-import io.tomrss.gluon.core.spec.RelationSpec;
 import io.tomrss.gluon.core.util.CaseUtils;
 
 public interface PhysicalNamingStrategy {
-    String table(EntitySpec entity);
 
-    String sequence(EntitySpec entity);
+    String table(String entityName);
 
-    String sequenceGenerator(EntitySpec entity);
+    String sequence(String entityName);
 
-    String primaryKey(EntitySpec entity);
+    String sequenceGenerator(String entityName);
 
-    String column(FieldSpec field);
+    String primaryKey(String entityName);
 
-    String foreignKey(RelationSpec relation);
+    String column(String fieldName);
 
-    String joinColumn(RelationSpec relation);
+    String foreignKey(String relationName);
 
-    String inverseJoinColumn(EntitySpec entitySpec, RelationSpec relationSpec);
+    String inverseJoinColumn(String entityName);
 
-    String joinTable(EntitySpec entitySpec, RelationSpec relationSpec);
+    String joinTable(String firstEntityName, String secondEntityName);
 
-    String index(EntitySpec entitySpec, IndexSpec index);
+    String index(String entityName, String indexName);
 
-    default String resourcePath(EntitySpec entity) {
-        return CaseUtils.toHyphenSeparated(entity.name());
+    String joinColumn(String relationName);
+
+    default String resourcePath(String entityName) {
+        return CaseUtils.toHyphenSeparated(entityName);
     }
 }

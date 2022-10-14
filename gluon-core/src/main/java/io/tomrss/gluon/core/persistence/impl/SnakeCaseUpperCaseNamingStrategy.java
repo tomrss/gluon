@@ -1,61 +1,57 @@
 package io.tomrss.gluon.core.persistence.impl;
 
 import io.tomrss.gluon.core.persistence.PhysicalNamingStrategy;
-import io.tomrss.gluon.core.spec.EntitySpec;
-import io.tomrss.gluon.core.spec.FieldSpec;
-import io.tomrss.gluon.core.spec.IndexSpec;
-import io.tomrss.gluon.core.spec.RelationSpec;
 import io.tomrss.gluon.core.util.CaseUtils;
 
 public class SnakeCaseUpperCaseNamingStrategy implements PhysicalNamingStrategy {
 
     @Override
-    public String table(EntitySpec entity) {
-        return CaseUtils.toSnakeCaseUpperCase(entity.name());
+    public String table(String entityName) {
+        return CaseUtils.toSnakeCaseUpperCase(entityName);
     }
 
     @Override
-    public String sequence(EntitySpec entity) {
-        return table(entity) + "_SEQ";
+    public String sequence(String entityName) {
+        return table(entityName) + "_SEQ";
     }
 
     @Override
-    public String sequenceGenerator(EntitySpec entity) {
-        return sequence(entity) + "_GEN";
+    public String sequenceGenerator(String entityName) {
+        return sequence(entityName) + "_GEN";
     }
 
     @Override
-    public String primaryKey(EntitySpec entity) {
-        return table(entity) + "_PK";
+    public String primaryKey(String entityName) {
+        return table(entityName) + "_PK";
     }
 
     @Override
-    public String column(FieldSpec field) {
-        return CaseUtils.toSnakeCaseUpperCase(field.name());
+    public String column(String fieldName) {
+        return CaseUtils.toSnakeCaseUpperCase(fieldName);
     }
 
     @Override
-    public String foreignKey(RelationSpec relation) {
-        return CaseUtils.toSnakeCaseUpperCase(relation.name()) + "_FK";
+    public String foreignKey(String relationName) {
+        return CaseUtils.toSnakeCaseUpperCase(relationName) + "_FK";
     }
 
     @Override
-    public String inverseJoinColumn(EntitySpec entitySpec, RelationSpec relationSpec) {
-        return table(entitySpec) + "_ID";
+    public String inverseJoinColumn(String entityName) {
+        return table(entityName) + "_ID";
     }
 
     @Override
-    public String joinTable(EntitySpec entitySpec, RelationSpec relationSpec) {
-        return table(entitySpec) + "_" + table(relationSpec.targetEntity());
+    public String joinTable(String firstEntityName, String secondEntityName) {
+        return table(firstEntityName) + "_" + table(secondEntityName);
     }
 
     @Override
-    public String index(EntitySpec entitySpec, IndexSpec index) {
-        return "IDX_" + table(entitySpec) + "_" + index.name();
+    public String index(String entityName, String indexName) {
+        return "IDX_" + table(entityName) + "_" + indexName;
     }
 
     @Override
-    public String joinColumn(RelationSpec relation) {
-        return CaseUtils.toSnakeCaseUpperCase(relation.name()) + "_ID";
+    public String joinColumn(String relationName) {
+        return CaseUtils.toSnakeCaseUpperCase(relationName) + "_ID";
     }
 }

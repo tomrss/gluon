@@ -4,7 +4,7 @@ import io.tomrss.gluon.core.model.RelationType;
 
 public record RelationSpec(
         String name,
-        EntitySpec targetEntity,
+        String targetEntity,
         RelationType type,
         boolean nullable,
         boolean unique

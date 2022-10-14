@@ -46,22 +46,20 @@ public class Main {
                         new FieldSpec("name", String.class, false, true, 50),
                         new FieldSpec("enabled", Boolean.class, false, false)
                 ));
-        final FieldSpec userName = new FieldSpec("name", String.class, false, false, 50);
-        final FieldSpec userEmail = new FieldSpec("emailBlaBlaBla", String.class, false, false, 100);
         final EntitySpec appUser = new EntitySpec("AppUser",
                 List.of(
-                        userName,
-                        userEmail,
+                        new FieldSpec("name", String.class, false, false, 50),
+                        new FieldSpec("emailBlaBlaBla", String.class, false, false, 100),
                         new FieldSpec("description", String.class),
                         new FieldSpec("active", Boolean.class, false, false)
                 ),
                 List.of(
-                        new RelationSpec("role", role, RelationType.MANY_TO_ONE, true, false),
-                        new RelationSpec("userSets", userSet, RelationType.MANY_TO_MANY, false, true)
+                        new RelationSpec("role", "Role", RelationType.MANY_TO_ONE, true, false),
+                        new RelationSpec("userSets", "UserSet", RelationType.MANY_TO_MANY, false, true)
                 ),
                 List.of(
-                        new IndexSpec("1", List.of(userName, userEmail), true),
-                        new IndexSpec("2", List.of(userName), false)
+                        new IndexSpec("1", List.of("name", "emailBlaBlaBla"), true),
+                        new IndexSpec("2", List.of("name"), false)
                 ));
         return List.of(role, userSet, appUser);
     }

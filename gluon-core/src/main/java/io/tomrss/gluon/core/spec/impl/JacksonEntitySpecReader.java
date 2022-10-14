@@ -31,7 +31,7 @@ public class JacksonEntitySpecReader implements EntitySpecReader {
         try {
             return objectMapper.readValue(file.toFile(), EntitySpec.class);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException(e); // TODO
         }
     }
 }

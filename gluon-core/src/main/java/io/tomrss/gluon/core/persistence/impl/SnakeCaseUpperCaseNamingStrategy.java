@@ -11,7 +11,7 @@ public class SnakeCaseUpperCaseNamingStrategy implements PhysicalNamingStrategy 
 
     @Override
     public String table(EntitySpec entity) {
-        return CaseUtils.toSnakeCaseUpperCase(entity.name);
+        return CaseUtils.toSnakeCaseUpperCase(entity.name());
     }
 
     @Override
@@ -31,12 +31,12 @@ public class SnakeCaseUpperCaseNamingStrategy implements PhysicalNamingStrategy 
 
     @Override
     public String column(FieldSpec field) {
-        return CaseUtils.toSnakeCaseUpperCase(field.name);
+        return CaseUtils.toSnakeCaseUpperCase(field.name());
     }
 
     @Override
     public String foreignKey(RelationSpec relation) {
-        return CaseUtils.toSnakeCaseUpperCase(relation.name) + "_FK";
+        return CaseUtils.toSnakeCaseUpperCase(relation.name()) + "_FK";
     }
 
     @Override
@@ -46,16 +46,16 @@ public class SnakeCaseUpperCaseNamingStrategy implements PhysicalNamingStrategy 
 
     @Override
     public String joinTable(EntitySpec entitySpec, RelationSpec relationSpec) {
-        return table(entitySpec) + "_" + table(relationSpec.targetEntity);
+        return table(entitySpec) + "_" + table(relationSpec.targetEntity());
     }
 
     @Override
     public String index(EntitySpec entitySpec, IndexSpec index) {
-        return "IDX_" + table(entitySpec) + "_" + index.name;
+        return "IDX_" + table(entitySpec) + "_" + index.name();
     }
 
     @Override
     public String joinColumn(RelationSpec relation) {
-        return CaseUtils.toSnakeCaseUpperCase(relation.name) + "_ID";
+        return CaseUtils.toSnakeCaseUpperCase(relation.name()) + "_ID";
     }
 }

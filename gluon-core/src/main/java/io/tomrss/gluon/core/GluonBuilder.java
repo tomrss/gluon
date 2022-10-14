@@ -22,7 +22,9 @@ import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("java:S1192") // I like to duplicate string literals for the sake of readability
 public class GluonBuilder {
+    // TODO sonarlint says these regex can overflow stack for large inputs, find another
     public static final Pattern ARTIFACT_ID_PATTERN = Pattern.compile("^[a-z]+(-[a-z]+)*$");
     public static final Pattern GROUP_ID_PATTERN = Pattern.compile("^[a-z]+(\\.[a-z]+)*$");
     public static final Pattern PACKAGE_PATTERN = Pattern.compile("^[a-z]+(\\.[a-z]+)*$");
@@ -189,7 +191,7 @@ public class GluonBuilder {
             rawFilesDirectory = getFirstExistingDirectory("rawFiles", DEFAULT_RAW_FOLDERS);
         }
         if (basePackage == null) {
-            basePackage = groupId + "." + artifactId.replaceAll("-", "");
+            basePackage = groupId + "." + artifactId.replace("-", "");
         }
         if (databaseVendor == null) {
             databaseVendor = DatabaseVendor.POSTGRESQL;

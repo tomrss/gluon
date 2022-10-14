@@ -1,25 +1,31 @@
 package io.tomrss.gluon.core.util;
 
 public class CaseUtils {
+
+    public static final String CAMEL_CASE_PATTERN = "([a-z])([A-Z])";
+
+    private CaseUtils() {
+    }
+
     public static String toSnakeCase(String s) {
         if (s == null) {
             return null;
         }
-        return s.replaceAll("([a-z])([A-Z])", "$1_$2").toLowerCase();
+        return s.replaceAll(CAMEL_CASE_PATTERN, "$1_$2").toLowerCase();
     }
 
     public static String toSnakeCaseUpperCase(String s) {
         if (s == null) {
             return null;
         }
-        return s.replaceAll("([a-z])([A-Z])", "$1_$2").toUpperCase();
+        return s.replaceAll(CAMEL_CASE_PATTERN, "$1_$2").toUpperCase();
     }
 
     public static String toHyphenSeparated(String s) {
         if (s == null) {
             return null;
         }
-        return s.replaceAll("([a-z])([A-Z])", "$1-$2").toLowerCase();
+        return s.replaceAll(CAMEL_CASE_PATTERN, "$1-$2").toLowerCase();
     }
 
     public static String capitalize(String s) {

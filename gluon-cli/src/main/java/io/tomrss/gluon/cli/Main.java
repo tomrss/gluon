@@ -56,7 +56,7 @@ public class Main {
                         new FieldSpec("active", Boolean.class, false, false)
                 ),
                 List.of(
-                        new RelationSpec("role", role, RelationType.MANY_TO_ONE),
+                        new RelationSpec("role", role, RelationType.MANY_TO_ONE, true, false),
                         new RelationSpec("userSets", userSet, RelationType.MANY_TO_MANY, false, true)
                 ),
                 List.of(

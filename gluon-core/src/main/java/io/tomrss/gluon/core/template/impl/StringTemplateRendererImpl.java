@@ -13,7 +13,6 @@ import java.util.regex.Pattern;
 public class StringTemplateRendererImpl implements StringTemplateRenderer {
     public static final Pattern TEMPLATE_VARIABLE_PATTERN = Pattern.compile("\\{\\{([a-zA-Z_.-]+)}}");
     public static final String PROPERTY_PATH_SEPARATOR = "\\.";
-    //TODO using different impl of StringTemplateRender will break this regex!
     public static final Pattern ENTITY_TEMPLATE_PATTERN = Pattern.compile("\\{\\{entity(\\..+)?}}");
 
     @Override

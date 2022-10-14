@@ -28,6 +28,6 @@ public interface PhysicalNamingStrategy {
     String index(EntitySpec entitySpec, IndexSpec index);
 
     default String resourcePath(EntitySpec entity) {
-        return CaseUtils.toHyphenSeparated(entity.name);
+        return CaseUtils.toHyphenSeparated(entity.name());
     }
 }

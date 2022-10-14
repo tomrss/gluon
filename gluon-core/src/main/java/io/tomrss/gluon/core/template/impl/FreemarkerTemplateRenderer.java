@@ -39,6 +39,7 @@ public class FreemarkerTemplateRenderer implements TemplateRenderer {
         final Template template = freemarker.getTemplate(templateName);
         try (final Writer writer = new FileWriter(outputFile.toFile())) {
             template.process(model, writer);
+            // TODO logger
             System.out.println("Template " + templateName + " rendered to file " + outputFile);
         } catch (TemplateException e) {
             throw new GluonTemplateException(e);

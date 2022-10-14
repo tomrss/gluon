@@ -39,6 +39,7 @@ public class Gluon {
     private final String templateExtension;
     private final EntitySpecReader entitySpecReader;
 
+    @SuppressWarnings("java:S107") // this is called only by factory, so it's not a problem
     Gluon(TemplateRenderer templateRenderer,
           Path templateDirectory,
           Path generatedProjectDirectory,

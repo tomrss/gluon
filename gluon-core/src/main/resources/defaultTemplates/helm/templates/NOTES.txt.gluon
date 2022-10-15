@@ -1,0 +1,10 @@
+Thank you for installing ${project.friendlyName} with chart {{ .Chart.Name }}.
+
+This chart was created by Gluon v${project.gluonVersion}.
+
+Your release is named {{ .Release.Name }}.
+
+To learn more about the release, try:
+
+  $ helm status {{ .Release.Name }}
+  $ helm get all {{ .Release.Name }}

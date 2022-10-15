@@ -1,5 +1,5 @@
 package io.tomrss.gluon.core.template;
 
-public interface StringTemplateRenderer {
+public interface StringTemplate {
     String render(String stringTemplate, Object model);
 }

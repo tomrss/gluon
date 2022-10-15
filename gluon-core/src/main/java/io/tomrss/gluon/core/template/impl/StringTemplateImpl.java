@@ -1,7 +1,7 @@
 package io.tomrss.gluon.core.template.impl;
 
 import io.tomrss.gluon.core.template.GluonTemplateException;
-import io.tomrss.gluon.core.template.StringTemplateRenderer;
+import io.tomrss.gluon.core.template.StringTemplate;
 import io.tomrss.gluon.core.util.CaseUtils;
 
 import java.lang.reflect.InvocationTargetException;
@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class StringTemplateRendererImpl implements StringTemplateRenderer {
+public class StringTemplateImpl implements StringTemplate {
     public static final Pattern TEMPLATE_VARIABLE_PATTERN = Pattern.compile("\\{\\{([a-zA-Z_.-]+)}}");
     public static final String PROPERTY_PATH_SEPARATOR = "\\.";
     public static final Pattern ENTITY_TEMPLATE_PATTERN = Pattern.compile("\\{\\{entity(\\..+)?}}");

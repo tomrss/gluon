@@ -1,37 +1,30 @@
 package io.tomrss.gluon.core.template.impl;
 
+import freemarker.cache.TemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import freemarker.template.TemplateExceptionHandler;
 import io.tomrss.gluon.core.template.GluonTemplateException;
-import io.tomrss.gluon.core.template.TemplateRenderer;
+import io.tomrss.gluon.core.template.TemplateManager;
 
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.nio.file.Path;
 
-public class FreemarkerTemplateRenderer implements TemplateRenderer {
+public abstract class FreemarkerTemplateManager implements TemplateManager {
 
     private final Configuration freemarker;
 
-    public FreemarkerTemplateRenderer() {
+    protected FreemarkerTemplateManager(TemplateLoader templateLoader) {
         this.freemarker = new Configuration(Configuration.VERSION_2_3_31);
         this.freemarker.setDefaultEncoding("UTF-8");
         this.freemarker.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
         this.freemarker.setLogTemplateExceptions(false);
         this.freemarker.setWrapUncheckedExceptions(true);
         this.freemarker.setFallbackOnNullLoopVariable(false);
-    }
-
-    @Override
-    public void setTemplateBaseDirectory(Path templateBaseDirectory) {
-        try {
-            this.freemarker.setDirectoryForTemplateLoading(templateBaseDirectory.toFile());
-        } catch (IOException e) {
-            throw new GluonTemplateException("Unable to instance freemarker template renderer", e);
-        }
+        this.freemarker.setTemplateLoader(templateLoader);
     }
 
     @Override

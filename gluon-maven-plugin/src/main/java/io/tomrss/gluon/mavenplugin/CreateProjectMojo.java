@@ -7,7 +7,6 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
-import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Optional;
 
@@ -32,14 +31,14 @@ public class CreateProjectMojo extends AbstractMojo {
     @Parameter(property = "basePackage")
     private String basePackage;
 
-    @Parameter(property = "templateDirectory")
-    private String templateDirectory;
+    @Parameter(property = "customTemplates")
+    private String customTemplates;
 
     @Parameter(property = "projectDirectory")
     private String projectDirectory;
 
-    @Parameter(property = "rawFilesDirectory")
-    private String rawFilesDirectory;
+    @Parameter(property = "rawFiles")
+    private String rawFiles;
 
     @Parameter(property = "imageRegistry")
     private String imageRegistry;
@@ -50,16 +49,19 @@ public class CreateProjectMojo extends AbstractMojo {
     @Parameter(property = "templateExtension")
     private String templateExtension;
 
-    @Parameter(property = "entitiesDirectory")
-    private String entitiesDirectory;
+    @Parameter(property = "entities")
+    private String entities;
+
+    @Parameter(property = "archetype")
+    private String archetype;
 
     public void execute() throws MojoExecutionException {
         try {
             final GluonBuilder gluonBuilder = new GluonBuilder();
 
             // all this optional hassle means: let gluon builder set the defaults, don't bother here
-            Optional.ofNullable(templateDirectory).map(Paths::get).ifPresent(gluonBuilder::templateDirectory);
-            Optional.ofNullable(rawFilesDirectory).map(Paths::get).ifPresent(gluonBuilder::rawFilesDirectory);
+            Optional.ofNullable(customTemplates).map(Paths::get).ifPresent(gluonBuilder::customTemplates);
+            Optional.ofNullable(rawFiles).map(Paths::get).ifPresent(gluonBuilder::rawFiles);
             Optional.ofNullable(projectDirectory).map(Paths::get).ifPresent(gluonBuilder::projectDirectory);
             Optional.ofNullable(projectGroupId).ifPresent(gluonBuilder::groupId);
             Optional.ofNullable(projectArtifactId).ifPresent(gluonBuilder::artifactId);
@@ -70,10 +72,11 @@ public class CreateProjectMojo extends AbstractMojo {
             Optional.ofNullable(imageRegistry).ifPresent(gluonBuilder::imageRegistry);
             Optional.ofNullable(databaseVendor).map(DatabaseVendor::valueOf).ifPresent(gluonBuilder::databaseVendor);
             Optional.ofNullable(templateExtension).ifPresent(gluonBuilder::templateExtension);
-            Optional.ofNullable(entitiesDirectory).map(Paths::get).ifPresent(gluonBuilder::readEntitiesFromJson);
+            Optional.ofNullable(entities).map(Paths::get).ifPresent(gluonBuilder::readEntitiesFromJson);
+            Optional.ofNullable(archetype).ifPresent(gluonBuilder::archetype);
 
             gluonBuilder.createGluon().generateProject();
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new MojoExecutionException("Unable to generate project", e);
         }
     }

@@ -7,9 +7,9 @@ import io.tomrss.gluon.core.model.TemplateModel;
 import io.tomrss.gluon.core.spec.EntitySpec;
 import io.tomrss.gluon.core.spec.EntitySpecReader;
 import io.tomrss.gluon.core.spec.ProjectSpec;
-import io.tomrss.gluon.core.template.StringTemplateRenderer;
-import io.tomrss.gluon.core.template.TemplateRenderer;
-import io.tomrss.gluon.core.template.impl.StringTemplateRendererImpl;
+import io.tomrss.gluon.core.template.StringTemplate;
+import io.tomrss.gluon.core.template.TemplateManager;
+import io.tomrss.gluon.core.template.impl.StringTemplateImpl;
 import org.apache.commons.io.FileExistsException;
 import org.apache.commons.io.FileUtils;
 
@@ -19,31 +19,27 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.function.Predicate;
-import java.util.stream.Stream;
 
 public class Gluon {
 
-    private static final Predicate<Path> IS_ENTITY_TEMPLATE = path ->
-            StringTemplateRendererImpl.ENTITY_TEMPLATE_PATTERN.matcher(path.toString()).find();
+    private static final Predicate<String> IS_ENTITY_TEMPLATE = path ->
+            StringTemplateImpl.ENTITY_TEMPLATE_PATTERN.matcher(path).find();
 
-    private final TemplateRenderer templateRenderer;
-    private final Path templateDirectory;
+    private final TemplateManager templateManager;
     private final Path projectDirectory;
     private final Path rawFilesDirectory;
     private final ProjectSpec projectSpec;
-    private final StringTemplateRenderer stringTemplateRenderer;
+    private final StringTemplate stringTemplate;
     private final String templateExtension;
     private final EntitySpecReader entitySpecReader;
 
-    Gluon(TemplateRenderer templateRenderer,
-          Path templateDirectory,
+    Gluon(TemplateManager templateManager,
           Path projectDirectory,
           Path rawFilesDirectory,
           ProjectSpec projectSpec,
           String templateExtension,
           EntitySpecReader entitySpecReader) {
-        this.templateRenderer = templateRenderer;
-        this.templateDirectory = templateDirectory;
+        this.templateManager = templateManager;
         this.projectDirectory = projectDirectory;
         this.rawFilesDirectory = rawFilesDirectory;
         this.projectSpec = projectSpec;
@@ -51,10 +47,7 @@ public class Gluon {
         this.entitySpecReader = entitySpecReader;
         // TODO this breaks the dependency inversion principle,
         //  however in current implementation is too dangerous to depend on abstraction
-        this.stringTemplateRenderer = new StringTemplateRendererImpl();
-
-        // TODO don't really like this
-        this.templateRenderer.setTemplateBaseDirectory(templateDirectory);
+        this.stringTemplate = new StringTemplateImpl();
     }
 
     public void generateProject() throws IOException {
@@ -74,8 +67,9 @@ public class Gluon {
     }
 
     private void generateSources(TemplateModel templateModel) throws IOException {
-        generateGlobalSources(templateModel.getGlobalModel());
-        generateEntitySources(templateModel.getEntityModels());
+        final List<String> templates = templateManager.listTemplates(templateExtension);
+        generateGlobalSources(templateModel.getGlobalModel(), templates);
+        generateEntitySources(templateModel.getEntityModels(), templates);
     }
 
     private void copyRawFiles() throws IOException {
@@ -83,45 +77,41 @@ public class Gluon {
         FileUtils.copyDirectory(rawFilesDirectory.toFile(), projectDirectory.toFile());
     }
 
-    private void generateGlobalSources(GlobalTemplateModel model) throws IOException {
-        final List<Path> globalTemplates = listTemplateFiles(IS_ENTITY_TEMPLATE.negate());
-        for (Path globalTemplate : globalTemplates) {
+    private void generateGlobalSources(GlobalTemplateModel model, List<String> templateFiles) throws IOException {
+        final List<String> globalTemplates = templateFiles.stream()
+                .filter(IS_ENTITY_TEMPLATE.negate())
+                .toList();
+        for (String globalTemplate : globalTemplates) {
             renderTemplate(globalTemplate, model);
         }
     }
 
-    private void generateEntitySources(List<EntityTemplateModel> models) throws IOException {
-        final List<Path> entityTemplates = listTemplateFiles(IS_ENTITY_TEMPLATE);
-        // TODO ugly but effective nested for loop, keep it?
-        for (Path entityTemplate : entityTemplates) {
+    private void generateEntitySources(List<EntityTemplateModel> models, List<String> templateFiles) throws IOException {
+        final List<String> entityTemplates = templateFiles.stream()
+                .filter(IS_ENTITY_TEMPLATE)
+                .toList();
+        for (String entityTemplate : entityTemplates) {
             for (EntityTemplateModel model : models) {
                 renderTemplate(entityTemplate, model);
             }
         }
     }
 
-    private void renderTemplate(Path templateName, Object model) throws IOException {
+    private void renderTemplate(String templateName, Object model) throws IOException {
         final Path outPath = resolveDestinationFilePath(templateName, model);
         final Path parent = Files.createDirectories(outPath.getParent());
         if (parent != null) {
             Files.createDirectories(parent);
         }
-        templateRenderer.render(templateName.toString(), model, outPath);
+        templateManager.render(templateName, model, outPath);
     }
 
-    private List<Path> listTemplateFiles(Predicate<Path> predicate) throws IOException {
-        try (final Stream<Path> templates = Files.walk(templateDirectory)) {
-            return templates
-                    .filter(Files::isRegularFile)
-                    .map(templateDirectory::relativize)
-                    .filter(f -> f.getFileName().toString().endsWith(templateExtension))
-                    .filter(predicate)
-                    .toList();
+    private Path resolveDestinationFilePath(String pathTemplate, Object model) {
+        final String resolved = stringTemplate.render(pathTemplate, model);
+        if (!resolved.endsWith(templateExtension)) {
+            // I decided that every template must end with .gluon, just for fun.
+            throw new IllegalArgumentException("Template file MUST have extension " + templateExtension);
         }
-    }
-
-    private Path resolveDestinationFilePath(Path pathTemplate, Object model) {
-        final String resolved = stringTemplateRenderer.render(pathTemplate.toString(), model);
         final String resolvedWithoutGluonExtension = resolved.substring(0, resolved.lastIndexOf(templateExtension));
         return Paths.get(projectDirectory.toString(), resolvedWithoutGluonExtension);
     }

@@ -1,8 +1,10 @@
 # ${project.friendlyName}
 
 **WARNING**: work in progress.
+<#if project.description??>
 
 ${project.description}.
+</#if>
 
 This project was bootstrapped by Gluon v${project.gluonVersion}.
 

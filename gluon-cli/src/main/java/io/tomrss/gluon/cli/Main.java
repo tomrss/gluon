@@ -19,7 +19,6 @@ public class Main {
     public static void main(String[] args) throws IOException {
 
         // TODO temp code, just for trying gluon...
-
         final Path generatedProjectDirectory = Paths.get("../example");
 
         final Gluon gluon = new GluonBuilder()

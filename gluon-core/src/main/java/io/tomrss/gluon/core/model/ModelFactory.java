@@ -41,6 +41,9 @@ public class ModelFactory {
         project.imageRegistry = projectSpec.imageRegistry();
         project.dbVendor = projectSpec.databaseVendor();
         project.gluonVersion = getClass().getPackage().getImplementationVersion();
+        if (project.gluonVersion == null) {
+            project.gluonVersion = "0.0.0"; // just to be sure
+        }
 
         // TODO list, list of map, map of list, maps passed as argument... AWFUL code, REFACTOR RIGHT NOW
         final List<Entity> entities = entitySpecs.stream()

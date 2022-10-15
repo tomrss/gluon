@@ -1,0 +1,44 @@
+image:
+  repository: <#if project.imageRegistry??>${project.imageRegistry}/</#if>${project.artifactId}
+  tag: ${project.version}
+  pullPolicy: IfNotPresent
+  pullSecrets: []
+
+restartPolicy: Always
+recreatePods: false
+replicaCount: 1
+
+service:
+  port: 8080
+  type: ClusterIP
+
+ingress:
+  enabled: true
+  # TODO set the host
+  className: nginx
+  host: ${project.artifactId}
+  path: /api
+  pathType: Prefix
+  tls:
+    enabled: false
+    secretName: ${project.artifactId}-tls
+  annotations: {}
+
+datasource:
+  # TODO set these connection properties
+  url: dbc:${project.dbVendor.quarkusDbKind}://gluon-example-datasource:5432/gluon_example
+  username: gluon_example
+  secretName: gluon-example
+liquibase:
+  migrateAtStart: true
+
+livenessProbe:
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  failureThreshold: 1
+readinessProbe:
+  initialDelaySeconds: 1
+  periodSeconds: 10
+  failureThreshold: 1
+
+resources: {}

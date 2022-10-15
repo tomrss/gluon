@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+    app: {{ .Release.Name }}
+    chart: {{ .Chart.Name }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+        release: {{ .Release.Name }}
+      {{- if .Values.recreatePods }}
+      annotations:
+        rollme: {{ randAlphaNum 5 | quote }}
+      {{- end }}
+      {{- if .Values.podAnnotations }}
+      {{- toYaml .Values.podAnnotations | nindent 6 }}
+      {{- end }}
+    spec:
+      restartPolicy: {{ .Values.restartPolicy }}
+      {{- if .Values.image.pullSecrets }}
+      imagePullSecrets:
+      {{- toYaml .Values.image.pullSecrets | nindent 6 }}
+      {{- end }}
+      containers:
+      - name: {{ .Chart.Name }}
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        env:
+        - name: QUARKUS_HTTP_PORT
+          value: {{ .Values.service.port | quote }}
+        - name: QUARKUS_DATASOURCE_JDBC_URL
+          value: {{ .Values.datasource.jdbcUrl }}
+        - name: QUARKUS_DATASOURCE_USERNAME
+          value: {{ .Values.datasource.username }}
+        - name: QUARKUS_DATASOURCE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.datasource.secretName }}
+              key: password
+        - name: QUARKUS_LIQUIBASE_MIGRATE_AT_START
+          value: {{ .Values.liquibase.migrateAtStart | quote }}
+        ports:
+        - name: http
+          containerPort: {{ .Values.service.port }}
+        {{- if .Values.readinessProbe }}
+        readinessProbe:
+          httpGet:
+            path: /q/health/ready
+            port: http
+          failureThreshold: {{ .Values.readinessProbe.failureThreshold | default 1 }}
+          periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
+          initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
+        {{- end }}
+        {{- if .Values.livenessProbe }}
+        livenessProbe:
+          httpGet:
+            path: /q/health/live
+            port: http
+          failureThreshold: {{ .Values.livenessProbe.failureThreshold }}
+          periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+          initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+        {{- end }}
+        {{- if .Values.resources }}
+        {{ toYaml .Values.resources | nindent 8 }}
+        {{- end }}

@@ -10,19 +10,23 @@ import io.tomrss.gluon.core.spec.EntitySpecReader;
 import io.tomrss.gluon.core.spec.ProjectSpec;
 import io.tomrss.gluon.core.spec.impl.JacksonEntitySpecReader;
 import io.tomrss.gluon.core.spec.impl.MockEntitySpecReader;
-import io.tomrss.gluon.core.template.TemplateRenderer;
-import io.tomrss.gluon.core.template.impl.FreemarkerTemplateRenderer;
+import io.tomrss.gluon.core.template.TemplateManager;
+import io.tomrss.gluon.core.template.impl.FileFreemarkerTemplateManager;
+import io.tomrss.gluon.core.template.impl.GluonArchetypeTemplateManager;
 import io.tomrss.gluon.core.util.CaseUtils;
 import org.apache.commons.io.FileUtils;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @SuppressWarnings("java:S1192") // I like to duplicate string literals for the sake of readability
 public class GluonBuilder {
@@ -42,9 +46,11 @@ public class GluonBuilder {
             Paths.get(".gluon", "raw"),
             Paths.get(FileUtils.getUserDirectoryPath(), ".gluon", "raw")
     );
+    public static final String DEFAULT_ARCHETYPE = "defaultTemplates";
 
-    private TemplateRenderer templateRenderer;
-    private Path templateDirectory;
+    private TemplateManager templateManager;
+    private Path customTemplatesDirectory;
+    private String archetype;
     private Path projectDirectory;
     private Path rawFilesDirectory;
     private String groupId;
@@ -58,13 +64,18 @@ public class GluonBuilder {
     private String templateExtension;
     private EntitySpecReader entitySpecReader;
 
-    public GluonBuilder templateRenderer(TemplateRenderer templateRenderer) {
-        this.templateRenderer = templateRenderer;
+    public GluonBuilder templateManager(TemplateManager templateManager) {
+        this.templateManager = templateManager;
         return this;
     }
 
-    public GluonBuilder templateDirectory(Path templateDirectory) {
-        this.templateDirectory = templateDirectory;
+    public GluonBuilder customTemplates(Path customTemplatesDirectory) {
+        this.customTemplatesDirectory = customTemplatesDirectory;
+        return this;
+    }
+
+    public GluonBuilder archetype(String archetype) {
+        this.archetype = archetype;
         return this;
     }
 
@@ -73,7 +84,7 @@ public class GluonBuilder {
         return this;
     }
 
-    public GluonBuilder rawFilesDirectory(Path rawFilesDirectory) {
+    public GluonBuilder rawFiles(Path rawFilesDirectory) {
         this.rawFilesDirectory = rawFilesDirectory;
         return this;
     }
@@ -163,21 +174,37 @@ public class GluonBuilder {
         return this;
     }
 
-    public Gluon createGluon() throws FileNotFoundException {
-        validateBuild();
-        setDefaults();
-        return new Gluon(templateRenderer,
-                templateDirectory,
-                projectDirectory,
-                rawFilesDirectory,
-                new ProjectSpec(groupId, artifactId, version, friendlyName, description, basePackage, imageRegistry, databaseVendor),
-                templateExtension,
-                entitySpecReader);
+    public Gluon createGluon() {
+        try {
+            validateBuild();
+            setDefaults();
+            return new Gluon(templateManager,
+                    projectDirectory,
+                    rawFilesDirectory,
+                    new ProjectSpec(groupId,
+                            artifactId,
+                            version,
+                            friendlyName,
+                            description,
+                            basePackage,
+                            imageRegistry,
+                            databaseVendor),
+                    templateExtension,
+                    entitySpecReader);
+        } catch (Exception e) {
+            throw new GluonInitException("Unable to create Gluon instance: " + e.getMessage(), e);
+        }
     }
 
     private void validateBuild() {
         final List<String> failedValidations = new ArrayList<>();
 
+        final long countOfNonNullTemplateProperties = Stream.of(templateManager, archetype, customTemplatesDirectory)
+                .filter(Objects::nonNull)
+                .count();
+        if (countOfNonNullTemplateProperties > 1) {
+            failedValidations.add("Properties 'templateManager', 'archetype', 'customTemplates' are mutually exclusive");
+        }
         if (artifactId == null) {
             failedValidations.add("artifactId is required");
         } else if (!ARTIFACT_ID_PATTERN.matcher(artifactId).matches()) {
@@ -193,18 +220,20 @@ public class GluonBuilder {
         }
 
         if (!failedValidations.isEmpty()) {
-            throw new IllegalArgumentException("Unable to build Gluon, following validations failed: " +
+            throw new IllegalArgumentException("Validations failed: " +
                     "[" + String.join("], [", failedValidations) + "]");
         }
     }
 
-    private void setDefaults() throws FileNotFoundException {
-        if (templateRenderer == null) {
-            templateRenderer = new FreemarkerTemplateRenderer();
-        }
-        if (templateDirectory == null) {
-            // TODO if this does not exist, default templates should be in jar and loaded from resources?
-            templateDirectory = getFirstExistingDirectory("template", DEFAULT_TEMPLATE_FOLDERS);
+    private void setDefaults() throws IOException {
+        if (templateManager == null) {
+            if (customTemplatesDirectory != null) {
+                templateManager = new FileFreemarkerTemplateManager(customTemplatesDirectory);
+            } else {
+                final String archetypeName = Objects.requireNonNullElse(archetype, DEFAULT_ARCHETYPE);
+                final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+                templateManager = new GluonArchetypeTemplateManager(classLoader, archetypeName);
+            }
         }
         if (projectDirectory == null) {
             // use artifactId relative path as default for generation directory
@@ -244,5 +273,26 @@ public class GluonBuilder {
                                 .map(Path::toAbsolutePath)
                                 .map(Path::toString)
                                 .collect(Collectors.joining(", "))));
+    }
+
+    public static class GluonInitException extends RuntimeException {
+        public GluonInitException() {
+        }
+
+        public GluonInitException(String message) {
+            super(message);
+        }
+
+        public GluonInitException(String message, Throwable cause) {
+            super(message, cause);
+        }
+
+        public GluonInitException(Throwable cause) {
+            super(cause);
+        }
+
+        public GluonInitException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+            super(message, cause, enableSuppression, writableStackTrace);
+        }
     }
 }

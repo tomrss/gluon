@@ -12,6 +12,7 @@ public class Project {
     String basePackage;
     String basePackagePath;
     DatabaseVendor dbVendor;
+    String gluonVersion;
 
     Project() {
     }
@@ -46,5 +47,9 @@ public class Project {
 
     public DatabaseVendor getDbVendor() {
         return dbVendor;
+    }
+
+    public String getGluonVersion() {
+        return gluonVersion;
     }
 }

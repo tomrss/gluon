@@ -1,0 +1,33 @@
+# ${project.friendlyName}
+
+**WARNING**: work in progress.
+
+${project.description}
+
+This project was bootstrapped by gluon v${project.gluonVersion}.
+
+## Getting started
+
+Run in development mode:
+```shell
+./mvnw quarkus:dev
+```
+Build jvm image:
+```shell
+docker build . -f src/main/docker/Dockerfile.jvm -t ${project.artifactId}:${project.version}-jvm
+```
+Build native image:
+```shell
+docker build . -f src/main/docker/Dockerfile.native-micro -t ${project.artifactId}:${project.version}
+```
+
+## Deployment in Kubernetes
+```shell
+helm install -n <namespace> ${project.artifactId} helm/
+```
+
+## Features
+
+- OpenAPI spec at /q/openapi
+- Swagger UI at /q/swagger-ui
+- Health checks at /q/health (like /q/health/ready and /q/health/live)

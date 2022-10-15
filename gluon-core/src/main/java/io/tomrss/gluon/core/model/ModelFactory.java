@@ -39,6 +39,7 @@ public class ModelFactory {
         project.basePackage = projectSpec.basePackage();
         project.basePackagePath = Paths.get("", project.basePackage.split("\\.")).toString();
         project.dbVendor = projectSpec.databaseVendor();
+        project.gluonVersion = getClass().getPackage().getImplementationVersion();
 
         // TODO list, list of map, map of list, maps passed as argument... AWFUL code, REFACTOR RIGHT NOW
         final List<Entity> entities = entitySpecs.stream()

@@ -11,6 +11,7 @@ public class Project {
     String description;
     String basePackage;
     String basePackagePath;
+    String imageRegistry;
     DatabaseVendor dbVendor;
     String gluonVersion;
 
@@ -43,6 +44,10 @@ public class Project {
 
     public String getBasePackagePath() {
         return basePackagePath;
+    }
+
+    public String getImageRegistry() {
+        return imageRegistry;
     }
 
     public DatabaseVendor getDbVendor() {

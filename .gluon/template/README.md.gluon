@@ -2,9 +2,9 @@
 
 **WARNING**: work in progress.
 
-${project.description}
+${project.description}.
 
-This project was bootstrapped by gluon v${project.gluonVersion}.
+This project was bootstrapped by Gluon v${project.gluonVersion}.
 
 ## Getting started
 
@@ -14,11 +14,11 @@ Run in development mode:
 ```
 Build jvm image:
 ```shell
-docker build . -f src/main/docker/Dockerfile.jvm -t ${project.artifactId}:${project.version}-jvm
+docker build . -f src/main/docker/Dockerfile.jvm -t <#if project.imageRegistry??>${project.imageRegistry}/</#if>${project.artifactId}:${project.version}-jvm
 ```
 Build native image:
 ```shell
-docker build . -f src/main/docker/Dockerfile.native-micro -t ${project.artifactId}:${project.version}
+docker build . -f src/main/docker/Dockerfile.native-micro -t <#if project.imageRegistry??>${project.imageRegistry}/</#if>${project.artifactId}:${project.version}
 ```
 
 ## Deployment in Kubernetes

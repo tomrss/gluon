@@ -9,6 +9,7 @@ public record ProjectSpec(
         String friendlyName,
         String description,
         String basePackage,
+        String imageRegistry,
         DatabaseVendor databaseVendor
 ) {
 }

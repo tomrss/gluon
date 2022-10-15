@@ -47,12 +47,13 @@ public class GluonBuilder {
     private Path templateDirectory;
     private Path projectDirectory;
     private Path rawFilesDirectory;
-    private String basePackage;
     private String groupId;
     private String artifactId;
     private String version;
     private String friendlyName;
     private String description;
+    private String basePackage;
+    private String imageRegistry;
     private DatabaseVendor databaseVendor;
     private String templateExtension;
     private EntitySpecReader entitySpecReader;
@@ -104,6 +105,11 @@ public class GluonBuilder {
 
     public GluonBuilder basePackage(String basePackage) {
         this.basePackage = basePackage;
+        return this;
+    }
+
+    public GluonBuilder imageRegistry(String imageRegistry) {
+        this.imageRegistry = imageRegistry;
         return this;
     }
 
@@ -164,7 +170,7 @@ public class GluonBuilder {
                 templateDirectory,
                 projectDirectory,
                 rawFilesDirectory,
-                new ProjectSpec(groupId, artifactId, version, friendlyName, description, basePackage, databaseVendor),
+                new ProjectSpec(groupId, artifactId, version, friendlyName, description, basePackage, imageRegistry, databaseVendor),
                 templateExtension,
                 entitySpecReader);
     }

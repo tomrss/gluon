@@ -6,6 +6,8 @@ public record ProjectSpec(
         String groupId,
         String artifactId,
         String version,
+        String friendlyName,
+        String description,
         String basePackage,
         DatabaseVendor databaseVendor
 ) {

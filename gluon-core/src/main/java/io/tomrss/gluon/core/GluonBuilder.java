@@ -12,6 +12,7 @@ import io.tomrss.gluon.core.spec.impl.JacksonEntitySpecReader;
 import io.tomrss.gluon.core.spec.impl.MockEntitySpecReader;
 import io.tomrss.gluon.core.template.TemplateRenderer;
 import io.tomrss.gluon.core.template.impl.FreemarkerTemplateRenderer;
+import io.tomrss.gluon.core.util.CaseUtils;
 import org.apache.commons.io.FileUtils;
 
 import java.io.FileNotFoundException;
@@ -50,6 +51,8 @@ public class GluonBuilder {
     private String groupId;
     private String artifactId;
     private String version;
+    private String friendlyName;
+    private String description;
     private DatabaseVendor databaseVendor;
     private String templateExtension;
     private EntitySpecReader entitySpecReader;
@@ -86,6 +89,16 @@ public class GluonBuilder {
 
     public GluonBuilder version(String version) {
         this.version = version;
+        return this;
+    }
+
+    public GluonBuilder friendlyName(String friendlyName) {
+        this.friendlyName = friendlyName;
+        return this;
+    }
+
+    public GluonBuilder description(String description) {
+        this.description = description;
         return this;
     }
 
@@ -151,7 +164,7 @@ public class GluonBuilder {
                 templateDirectory,
                 projectDirectory,
                 rawFilesDirectory,
-                new ProjectSpec(groupId, artifactId, version, basePackage, databaseVendor),
+                new ProjectSpec(groupId, artifactId, version, friendlyName, description, basePackage, databaseVendor),
                 templateExtension,
                 entitySpecReader);
     }
@@ -196,6 +209,9 @@ public class GluonBuilder {
         }
         if (version == null) {
             version = "0.1.0";
+        }
+        if (friendlyName == null) {
+            friendlyName = CaseUtils.hyphenSeparatedToDescriptive(artifactId);
         }
         if (basePackage == null) {
             basePackage = groupId + "." + artifactId.replace("-", "");

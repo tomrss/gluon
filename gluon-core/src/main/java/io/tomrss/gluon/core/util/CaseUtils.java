@@ -1,8 +1,12 @@
 package io.tomrss.gluon.core.util;
 
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
 public class CaseUtils {
 
     public static final String CAMEL_CASE_PATTERN = "([a-z])([A-Z])";
+    public static final String HYPHEN_SEPARATED_PATTERN = "([a-z])-([a-z])";
 
     private CaseUtils() {
     }
@@ -39,5 +43,11 @@ public class CaseUtils {
             return s.toUpperCase();
         }
         return s.substring(0, 1).toUpperCase() + s.substring(1);
+    }
+
+    public static String hyphenSeparatedToDescriptive(String s) {
+        return Arrays.stream(s.replaceAll(HYPHEN_SEPARATED_PATTERN, "$1 $2").split("\\s"))
+                .map(CaseUtils::capitalize)
+                .collect(Collectors.joining(" "));
     }
 }

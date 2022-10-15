@@ -6,8 +6,17 @@ quarkus.datasource.password=gluon_example
 # TODO warning: change jdbc url probably valid only for postgres
 quarkus.datasource.jdbc.url=jdbc:${project.dbVendor.quarkusDbKind}://localhost:5432/gluon_example
 quarkus.hibernate-orm.database.globally-quoted-identifiers=true
-
 quarkus.liquibase.change-log=liquibase/db-changelog-master.yml
 quarkus.liquibase.migrate-at-start=true
 
+quarkus.banner.path=banner.txt
+quarkus.http.access-log.enabled=true
+quarkus.http.access-log.exclude-pattern=^\/q\/.*$
+
+quarkus.smallrye-openapi.info-title=${project.friendlyName}
+%dev.quarkus.smallrye-openapi.info-title=${project.friendlyName} (development)
+quarkus.smallrye-openapi.info-version=${project.version}
+<#if project.description??>
+quarkus.smallrye-openapi.info-description=${project.description}
+</#if>
 quarkus.swagger-ui.always-include=true

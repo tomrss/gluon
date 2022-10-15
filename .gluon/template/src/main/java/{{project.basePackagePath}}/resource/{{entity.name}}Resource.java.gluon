@@ -10,7 +10,7 @@ import javax.ws.rs.core.Response;
 import java.net.URI;
 import java.util.List;
 
-@Path("/${entity.resourcePath}")
+@Path("/api/${entity.resourcePath}")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class ${entity.name}Resource {
@@ -33,7 +33,7 @@ public class ${entity.name}Resource {
     @POST
     public Response create(${entity.name} entity) {
         service.create(entity);
-        return Response.created(URI.create("/${entity.resourcePath}/" + entity.id)).build();
+        return Response.created(URI.create("/api/${entity.resourcePath}/" + entity.id)).build();
     }
     
     @PUT

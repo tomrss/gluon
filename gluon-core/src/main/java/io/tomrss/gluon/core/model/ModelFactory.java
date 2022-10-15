@@ -34,6 +34,8 @@ public class ModelFactory {
         project.groupId = projectSpec.groupId();
         project.artifactId = projectSpec.artifactId();
         project.version = projectSpec.version();
+        project.friendlyName = projectSpec.friendlyName();
+        project.description = projectSpec.description();
         project.basePackage = projectSpec.basePackage();
         project.basePackagePath = Paths.get("", project.basePackage.split("\\.")).toString();
         project.dbVendor = projectSpec.databaseVendor();

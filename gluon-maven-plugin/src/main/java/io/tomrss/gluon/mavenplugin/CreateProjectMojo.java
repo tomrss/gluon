@@ -23,6 +23,12 @@ public class CreateProjectMojo extends AbstractMojo {
     @Parameter(property = "projectVersion")
     private String projectVersion;
 
+    @Parameter(property = "projectFriendlyName")
+    private String projectFriendlyName;
+
+    @Parameter(property = "projectDescription")
+    private String projectDescription;
+
     @Parameter(property = "basePackage")
     private String basePackage;
 
@@ -48,12 +54,15 @@ public class CreateProjectMojo extends AbstractMojo {
         try {
             final GluonBuilder gluonBuilder = new GluonBuilder();
 
+            // all this optional hassle means: let gluon builder set the defaults, don't bother here
             Optional.ofNullable(templateDirectory).map(Paths::get).ifPresent(gluonBuilder::templateDirectory);
             Optional.ofNullable(rawFilesDirectory).map(Paths::get).ifPresent(gluonBuilder::rawFilesDirectory);
             Optional.ofNullable(projectDirectory).map(Paths::get).ifPresent(gluonBuilder::projectDirectory);
             Optional.ofNullable(projectGroupId).ifPresent(gluonBuilder::groupId);
             Optional.ofNullable(projectArtifactId).ifPresent(gluonBuilder::artifactId);
             Optional.ofNullable(projectVersion).ifPresent(gluonBuilder::version);
+            Optional.ofNullable(projectFriendlyName).ifPresent(gluonBuilder::friendlyName);
+            Optional.ofNullable(projectDescription).ifPresent(gluonBuilder::description);
             Optional.ofNullable(basePackage).ifPresent(gluonBuilder::basePackage);
             Optional.ofNullable(databaseVendor).map(DatabaseVendor::valueOf).ifPresent(gluonBuilder::databaseVendor);
             Optional.ofNullable(templateExtension).ifPresent(gluonBuilder::templateExtension);

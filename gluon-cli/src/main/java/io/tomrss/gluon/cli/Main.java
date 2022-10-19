@@ -1,64 +1,87 @@
 package io.tomrss.gluon.cli;
 
-import io.tomrss.gluon.core.Gluon;
 import io.tomrss.gluon.core.GluonBuilder;
-import io.tomrss.gluon.core.model.RelationType;
-import io.tomrss.gluon.core.spec.EntitySpec;
-import io.tomrss.gluon.core.spec.FieldSpec;
-import io.tomrss.gluon.core.spec.IndexSpec;
-import io.tomrss.gluon.core.spec.RelationSpec;
-import org.apache.commons.io.FileUtils;
+import io.tomrss.gluon.core.persistence.DatabaseVendor;
+import picocli.CommandLine;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
 
-import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.Callable;
 
-public class Main {
+@Command(name = "gluon", mixinStandardHelpOptions = true)
+public class Main implements Callable<Integer> {
 
-    public static void main(String[] args) throws IOException {
+    @Option(names = "--projectGroupId")
+    private String projectGroupId;
 
-        // TODO temp code, just for trying gluon...
-        final Path generatedProjectDirectory = Paths.get("../example");
+    @Option(names = "--projectArtifactId")
+    private String projectArtifactId;
 
-        final Gluon gluon = new GluonBuilder()
-                .projectDirectory(generatedProjectDirectory)
-                .groupId("io.tomrss.gluon")
-                .artifactId("example")
-                .createGluon();
+    @Option(names = "--projectVersion")
+    private String projectVersion;
 
-        FileUtils.deleteDirectory(generatedProjectDirectory.toFile());
+    @Option(names = "--projectFriendlyName")
+    private String projectFriendlyName;
 
-        gluon.generateProject();
+    @Option(names = "--projectDescription")
+    private String projectDescription;
+
+    @Option(names = "--basePackage")
+    private String basePackage;
+
+    @Option(names = "--customTemplates")
+    private String customTemplates;
+
+    @Option(names = "--projectDirectory")
+    private String projectDirectory;
+
+    @Option(names = "--imageRegistry")
+    private String imageRegistry;
+
+    @Option(names = "--databaseVendor")
+    private String databaseVendor;
+
+    @Option(names = "--templateExtension")
+    private String templateExtension;
+
+    @Option(names = "--entities")
+    private String entities;
+
+    @Option(names = "--archetype")
+    private String archetype;
+
+    @Override
+    public Integer call() throws Exception {
+        try {
+            final GluonBuilder gluonBuilder = new GluonBuilder();
+
+            // all this optional hassle means: let gluon builder set the defaults, don't bother here
+            Optional.ofNullable(customTemplates).map(Paths::get).ifPresent(gluonBuilder::customTemplates);
+            Optional.ofNullable(projectDirectory).map(Paths::get).ifPresent(gluonBuilder::projectDirectory);
+            Optional.ofNullable(projectGroupId).ifPresent(gluonBuilder::groupId);
+            Optional.ofNullable(projectArtifactId).ifPresent(gluonBuilder::artifactId);
+            Optional.ofNullable(projectVersion).ifPresent(gluonBuilder::version);
+            Optional.ofNullable(projectFriendlyName).ifPresent(gluonBuilder::friendlyName);
+            Optional.ofNullable(projectDescription).ifPresent(gluonBuilder::description);
+            Optional.ofNullable(basePackage).ifPresent(gluonBuilder::basePackage);
+            Optional.ofNullable(imageRegistry).ifPresent(gluonBuilder::imageRegistry);
+            Optional.ofNullable(databaseVendor).map(DatabaseVendor::valueOf).ifPresent(gluonBuilder::databaseVendor);
+            Optional.ofNullable(templateExtension).ifPresent(gluonBuilder::templateExtension);
+            Optional.ofNullable(entities).map(Paths::get).ifPresent(gluonBuilder::readEntitiesFromJson);
+            Optional.ofNullable(archetype).ifPresent(gluonBuilder::archetype);
+
+            gluonBuilder.createGluon().generateProject();
+            return 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 1;
+        }
     }
 
-    private static List<EntitySpec> mockEntities() {
-        final EntitySpec role = new EntitySpec("Role",
-                List.of(
-                        new FieldSpec("name", String.class, false, true, 50),
-                        new FieldSpec("enabled", Boolean.class, false, false),
-                        new FieldSpec("assignableToUser", Boolean.class, false, false)
-                ));
-        final EntitySpec userSet = new EntitySpec("UserSet",
-                List.of(
-                        new FieldSpec("name", String.class, false, true, 50),
-                        new FieldSpec("enabled", Boolean.class, false, false)
-                ));
-        final EntitySpec appUser = new EntitySpec("AppUser",
-                List.of(
-                        new FieldSpec("name", String.class, false, false, 50),
-                        new FieldSpec("emailBlaBlaBla", String.class, false, false, 100),
-                        new FieldSpec("description", String.class),
-                        new FieldSpec("active", Boolean.class, false, false)
-                ),
-                List.of(
-                        new RelationSpec("role", "Role", RelationType.MANY_TO_ONE, true, false),
-                        new RelationSpec("userSets", "UserSet", RelationType.MANY_TO_MANY, false, true)
-                ),
-                List.of(
-                        new IndexSpec("1", List.of("name", "emailBlaBlaBla"), true),
-                        new IndexSpec("2", List.of("name"), false)
-                ));
-        return List.of(role, userSet, appUser);
+    public static void main(String[] args) {
+        int exitCode = new CommandLine(new Main()).execute(args);
+        System.exit(exitCode);
     }
 }

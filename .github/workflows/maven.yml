@@ -24,3 +24,5 @@ jobs:
         cache: maven
     - name: Build with Maven
       run: mvn -B verify --file pom.xml
+    - name: SonarQube Scan
+      uses: SonarSource/sonarqube-scan-action@v1.1.0

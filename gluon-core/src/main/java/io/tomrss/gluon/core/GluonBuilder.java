@@ -14,7 +14,6 @@ import io.tomrss.gluon.core.template.TemplateManager;
 import io.tomrss.gluon.core.template.impl.FileFreemarkerTemplateManager;
 import io.tomrss.gluon.core.template.impl.GluonArchetypeTemplateManager;
 import io.tomrss.gluon.core.util.CaseUtils;
-import org.apache.commons.io.FileUtils;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -38,21 +37,12 @@ public class GluonBuilder {
     public static final List<Path> DEFAULT_ENTITY_FOLDERS = List.of(
             Paths.get(".gluon", "entity")
     );
-    public static final List<Path> DEFAULT_TEMPLATE_FOLDERS = List.of(
-            Paths.get(".gluon", "template"),
-            Paths.get(FileUtils.getUserDirectoryPath(), ".gluon", "template")
-    );
-    public static final List<Path> DEFAULT_RAW_FOLDERS = List.of(
-            Paths.get(".gluon", "raw"),
-            Paths.get(FileUtils.getUserDirectoryPath(), ".gluon", "raw")
-    );
-    public static final String DEFAULT_ARCHETYPE = "defaultTemplates";
+    public static final String DEFAULT_ARCHETYPE = "quarkus-gluon-default";
 
     private TemplateManager templateManager;
     private Path customTemplatesDirectory;
     private String archetype;
     private Path projectDirectory;
-    private Path rawFilesDirectory;
     private String groupId;
     private String artifactId;
     private String version;
@@ -81,11 +71,6 @@ public class GluonBuilder {
 
     public GluonBuilder projectDirectory(Path projectDirectory) {
         this.projectDirectory = projectDirectory;
-        return this;
-    }
-
-    public GluonBuilder rawFiles(Path rawFilesDirectory) {
-        this.rawFilesDirectory = rawFilesDirectory;
         return this;
     }
 
@@ -180,7 +165,6 @@ public class GluonBuilder {
             setDefaults();
             return new Gluon(templateManager,
                     projectDirectory,
-                    rawFilesDirectory,
                     new ProjectSpec(groupId,
                             artifactId,
                             version,
@@ -238,9 +222,6 @@ public class GluonBuilder {
         if (projectDirectory == null) {
             // use artifactId relative path as default for generation directory
             projectDirectory = Paths.get(artifactId);
-        }
-        if (rawFilesDirectory == null) {
-            rawFilesDirectory = getFirstExistingDirectory("rawFiles", DEFAULT_RAW_FOLDERS);
         }
         if (version == null) {
             version = "0.1.0";

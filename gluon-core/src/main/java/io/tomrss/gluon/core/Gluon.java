@@ -11,23 +11,36 @@ import io.tomrss.gluon.core.template.StringTemplate;
 import io.tomrss.gluon.core.template.TemplateManager;
 import io.tomrss.gluon.core.template.impl.StringTemplateImpl;
 import org.apache.commons.io.FileExistsException;
-import org.apache.commons.io.FileUtils;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.function.Predicate;
 
+import static io.tomrss.gluon.core.template.impl.StringTemplateImpl.ENTITY_TEMPLATE_PATTERN;
+
 public class Gluon {
 
-    private static final Predicate<String> IS_ENTITY_TEMPLATE = path ->
-            StringTemplateImpl.ENTITY_TEMPLATE_PATTERN.matcher(path).find();
+    public static final List<String> RAW_FILES_RESOURCES = List.of(
+            ".gitignore",
+            ".dockerignore",
+            "mvnw",
+            "mvnw.cmd",
+            ".mvn/wrapper/maven-wrapper.properties",
+            ".mvn/wrapper/maven-wrapper.jar",
+            ".mvn/wrapper/MavenWrapperDownloader.java"
+    );
+
+    private static final Predicate<String> IS_ENTITY_TEMPLATE = path -> ENTITY_TEMPLATE_PATTERN.matcher(path).find();
+    public static final String RAW_BASE_PATH = "raw/";
 
     private final TemplateManager templateManager;
     private final Path projectDirectory;
-    private final Path rawFilesDirectory;
     private final ProjectSpec projectSpec;
     private final StringTemplate stringTemplate;
     private final String templateExtension;
@@ -35,13 +48,11 @@ public class Gluon {
 
     Gluon(TemplateManager templateManager,
           Path projectDirectory,
-          Path rawFilesDirectory,
           ProjectSpec projectSpec,
           String templateExtension,
           EntitySpecReader entitySpecReader) {
         this.templateManager = templateManager;
         this.projectDirectory = projectDirectory;
-        this.rawFilesDirectory = rawFilesDirectory;
         this.projectSpec = projectSpec;
         this.templateExtension = templateExtension;
         this.entitySpecReader = entitySpecReader;
@@ -58,7 +69,6 @@ public class Gluon {
         Files.createDirectory(projectDirectory);
 
         final List<EntitySpec> entitySpecs = entitySpecReader.read();
-
         final ModelFactory modelFactory = new ModelFactory(projectSpec);
         final TemplateModel templateModel = modelFactory.buildModelForEntities(entitySpecs);
 
@@ -73,8 +83,23 @@ public class Gluon {
     }
 
     private void copyRawFiles() throws IOException {
-        // TODO apache-commons-io is imported just for this. Rewrite this method and drop apache-commons-io dependency
-        FileUtils.copyDirectory(rawFilesDirectory.toFile(), projectDirectory.toFile());
+        final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        for (String rawFilesResource : RAW_FILES_RESOURCES) {
+            final URL resource = classLoader.getResource(RAW_BASE_PATH + rawFilesResource);
+            if (resource == null) {
+                throw new IllegalArgumentException("Resource " + rawFilesResource + " is required");
+            }
+            final Path targetFile = projectDirectory.resolve(rawFilesResource);
+            mkdirs(targetFile);
+            try (final InputStream inputStream = resource.openStream();
+                 final OutputStream outputStream = new FileOutputStream(targetFile.toFile())) {
+                byte[] buffer = new byte[8 * 1024];
+                int bytesRead;
+                while ((bytesRead = inputStream.read(buffer)) != -1) {
+                    outputStream.write(buffer, 0, bytesRead);
+                }
+            }
+        }
     }
 
     private void generateGlobalSources(GlobalTemplateModel model, List<String> templateFiles) throws IOException {
@@ -99,10 +124,7 @@ public class Gluon {
 
     private void renderTemplate(String templateName, Object model) throws IOException {
         final Path outPath = resolveDestinationFilePath(templateName, model);
-        final Path parent = Files.createDirectories(outPath.getParent());
-        if (parent != null) {
-            Files.createDirectories(parent);
-        }
+        mkdirs(outPath);
         templateManager.render(templateName, model, outPath);
     }
 
@@ -113,6 +135,13 @@ public class Gluon {
             throw new IllegalArgumentException("Template file MUST have extension " + templateExtension);
         }
         final String resolvedWithoutGluonExtension = resolved.substring(0, resolved.lastIndexOf(templateExtension));
-        return Paths.get(projectDirectory.toString(), resolvedWithoutGluonExtension);
+        return projectDirectory.resolve(resolvedWithoutGluonExtension);
+    }
+
+    private void mkdirs(Path targetFile) throws IOException {
+        final Path targetFileParent = targetFile.getParent();
+        if (targetFileParent != null) {
+            Files.createDirectories(targetFileParent);
+        }
     }
 }

@@ -1,8 +1,6 @@
 package io.tomrss.gluon.core.model;
 
 public class Relation {
-    Relation() {
-    }
 
     String name;
     Entity targetEntity;
@@ -13,6 +11,9 @@ public class Relation {
     String foreignKeyName;
     boolean nullable;
     boolean unique;
+
+    Relation() {
+    }
 
     public String getName() {
         return name;

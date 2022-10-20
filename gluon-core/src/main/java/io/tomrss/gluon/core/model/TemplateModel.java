@@ -3,6 +3,7 @@ package io.tomrss.gluon.core.model;
 import java.util.List;
 
 public class TemplateModel {
+
     GlobalTemplateModel globalModel;
     List<EntityTemplateModel> entityModels;
 

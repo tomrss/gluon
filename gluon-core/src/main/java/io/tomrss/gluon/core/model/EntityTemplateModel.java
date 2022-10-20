@@ -1,6 +1,7 @@
 package io.tomrss.gluon.core.model;
 
 public class EntityTemplateModel {
+
     Project project;
     Entity entity;
 

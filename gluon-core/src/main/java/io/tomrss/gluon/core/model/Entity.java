@@ -4,9 +4,6 @@ import java.util.List;
 
 public class Entity {
 
-    Entity() {
-    }
-
     String name;
     String table;
     String sequence;
@@ -17,6 +14,9 @@ public class Entity {
     List<Relation> relations;
     List<Index> indexes;
     String idSqlType;
+
+    Entity() {
+    }
 
     public String getName() {
         return name;

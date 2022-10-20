@@ -1,30 +1,24 @@
 package io.tomrss.gluon.core;
 
-import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.fasterxml.jackson.dataformat.toml.TomlMapper;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import io.tomrss.gluon.core.persistence.DatabaseVendor;
 import io.tomrss.gluon.core.spec.EntitySpec;
-import io.tomrss.gluon.core.spec.EntitySpecReader;
+import io.tomrss.gluon.core.spec.EntitySpecLoader;
 import io.tomrss.gluon.core.spec.ProjectSpec;
-import io.tomrss.gluon.core.spec.impl.JacksonEntitySpecReader;
-import io.tomrss.gluon.core.spec.impl.MockEntitySpecReader;
+import io.tomrss.gluon.core.spec.SpecFormat;
+import io.tomrss.gluon.core.spec.impl.JacksonEntitySpecLoader;
+import io.tomrss.gluon.core.spec.impl.MockEntitySpecLoader;
 import io.tomrss.gluon.core.template.TemplateManager;
 import io.tomrss.gluon.core.template.impl.FileFreemarkerTemplateManager;
 import io.tomrss.gluon.core.template.impl.GluonArchetypeTemplateManager;
 import io.tomrss.gluon.core.util.CaseUtils;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @SuppressWarnings("java:S1192") // I like to duplicate string literals for the sake of readability
@@ -38,12 +32,14 @@ public class GluonBuilder {
     public static final String DEFAULT_ARTIFACT_ID = "gluon-example";
     public static final String DEFAULT_VERSION = "0.1.0";
     public static final String DEFAULT_TEMPLATE_EXTENSION = ".gluon";
-    public static final List<Path> DEFAULT_ENTITY_FOLDERS = List.of(Paths.get(".gluon", "entity"));
+    public static final SpecFormat DEFAULT_FORMAT = SpecFormat.JSON;
 
     private TemplateManager templateManager;
     private Path customTemplatesDirectory;
-    private String archetype;
     private Path projectDirectory;
+    private Path entityDirectory;
+    private SpecFormat entityFormat;
+    private String archetype;
     private String groupId;
     private String artifactId;
     private String version;
@@ -53,25 +49,40 @@ public class GluonBuilder {
     private String imageRegistry;
     private DatabaseVendor databaseVendor;
     private String templateExtension;
-    private EntitySpecReader entitySpecReader;
+    private List<EntitySpec> mockEntities;
 
     public GluonBuilder templateManager(TemplateManager templateManager) {
         this.templateManager = templateManager;
         return this;
     }
 
-    public GluonBuilder customTemplates(Path customTemplatesDirectory) {
+    public GluonBuilder customTemplatesDirectory(Path customTemplatesDirectory) {
         this.customTemplatesDirectory = customTemplatesDirectory;
-        return this;
-    }
-
-    public GluonBuilder archetype(String archetype) {
-        this.archetype = archetype;
         return this;
     }
 
     public GluonBuilder projectDirectory(Path projectDirectory) {
         this.projectDirectory = projectDirectory;
+        return this;
+    }
+
+    public GluonBuilder entityDirectory(Path entityDirectory) {
+        this.entityDirectory = entityDirectory;
+        return this;
+    }
+
+    public GluonBuilder entityFormat(SpecFormat entityFormat) {
+        this.entityFormat = entityFormat;
+        return this;
+    }
+
+    public GluonBuilder entityFormat(String entityFormat) {
+        this.entityFormat = SpecFormat.from(entityFormat);
+        return this;
+    }
+
+    public GluonBuilder archetype(String archetype) {
+        this.archetype = archetype;
         return this;
     }
 
@@ -121,42 +132,7 @@ public class GluonBuilder {
     }
 
     public GluonBuilder mockEntities(List<EntitySpec> mockEntities) {
-        if (entitySpecReader != null) {
-            throw new IllegalArgumentException("Cannot set mock entities when Gluon is already configured to read from file");
-        }
-        this.entitySpecReader = new MockEntitySpecReader(mockEntities);
-        return this;
-    }
-
-    public GluonBuilder readEntitiesFromJson(Path jsonEntitiesPath) {
-        if (entitySpecReader != null) {
-            throw new IllegalArgumentException("Cannot read from multiple sources");
-        }
-        this.entitySpecReader = new JacksonEntitySpecReader(jsonEntitiesPath, new JsonMapper());
-        return this;
-    }
-
-    public GluonBuilder readEntitiesFromYaml(Path yamlEntitiesPath) {
-        if (entitySpecReader != null) {
-            throw new IllegalArgumentException("Cannot read from multiple sources");
-        }
-        this.entitySpecReader = new JacksonEntitySpecReader(yamlEntitiesPath, new YAMLMapper());
-        return this;
-    }
-
-    public GluonBuilder readEntitiesFromXml(Path xmlEntitiesPath) {
-        if (entitySpecReader != null) {
-            throw new IllegalArgumentException("Cannot read from multiple sources");
-        }
-        this.entitySpecReader = new JacksonEntitySpecReader(xmlEntitiesPath, new XmlMapper());
-        return this;
-    }
-
-    public GluonBuilder readEntitiesFromToml(Path tomlEntitiesPath) {
-        if (entitySpecReader != null) {
-            throw new IllegalArgumentException("Cannot read from multiple sources");
-        }
-        this.entitySpecReader = new JacksonEntitySpecReader(tomlEntitiesPath, new TomlMapper());
+        this.mockEntities = mockEntities;
         return this;
     }
 
@@ -164,6 +140,9 @@ public class GluonBuilder {
         try {
             validateBuild();
             setDefaults();
+            final EntitySpecLoader entitySpecLoader = mockEntities == null
+                    ? new JacksonEntitySpecLoader(entityDirectory, entityFormat)
+                    : new MockEntitySpecLoader(mockEntities);
             return new Gluon(templateManager,
                     projectDirectory,
                     new ProjectSpec(groupId,
@@ -175,7 +154,7 @@ public class GluonBuilder {
                             imageRegistry,
                             databaseVendor),
                     templateExtension,
-                    entitySpecReader);
+                    entitySpecLoader);
         } catch (Exception e) {
             throw new GluonInitException("Unable to create Gluon instance: " + e.getMessage(), e);
         }
@@ -199,6 +178,10 @@ public class GluonBuilder {
         if (basePackage != null && !PACKAGE_PATTERN.matcher(basePackage).matches()) {
             failedValidations.add("Base package should match regex" + PACKAGE_PATTERN);
         }
+        if (entityDirectory == null && mockEntities == null) {
+            // do not tell the client that it can mock entities, for avoiding strange messages in cli and maven plugin
+            failedValidations.add("Entity directory is required");
+        }
 
         if (!failedValidations.isEmpty()) {
             throw new IllegalArgumentException("Validations failed: " +
@@ -216,9 +199,8 @@ public class GluonBuilder {
                 templateManager = new GluonArchetypeTemplateManager(classLoader, archetypeName);
             }
         }
-        if (projectDirectory == null) {
-            // use artifactId relative path as default for generation directory
-            projectDirectory = Paths.get(artifactId);
+        if (entityFormat == null) {
+            entityFormat = DEFAULT_FORMAT;
         }
         if (groupId == null) {
             groupId = DEFAULT_GROUP_ID;
@@ -228,6 +210,10 @@ public class GluonBuilder {
         }
         if (version == null) {
             version = DEFAULT_VERSION;
+        }
+        if (projectDirectory == null) {
+            // use artifactId relative path as default for generation directory
+            projectDirectory = Paths.get(artifactId);
         }
         if (friendlyName == null) {
             friendlyName = CaseUtils.hyphenSeparatedToDescriptive(artifactId);
@@ -241,22 +227,6 @@ public class GluonBuilder {
         if (templateExtension == null) {
             templateExtension = DEFAULT_TEMPLATE_EXTENSION;
         }
-        if (entitySpecReader == null) {
-            final Path entityDirectory = getFirstExistingDirectory("entity", DEFAULT_ENTITY_FOLDERS);
-            entitySpecReader = new JacksonEntitySpecReader(entityDirectory, new JsonMapper());
-        }
-    }
-
-    private static Path getFirstExistingDirectory(String directoryUsage, List<Path> paths) throws FileNotFoundException {
-        return paths.stream()
-                .filter(Files::exists)
-                .filter(Files::isDirectory)
-                .findFirst()
-                .orElseThrow(() -> new FileNotFoundException("Directory " + directoryUsage + " not found in " +
-                        paths.stream()
-                                .map(Path::toAbsolutePath)
-                                .map(Path::toString)
-                                .collect(Collectors.joining(", "))));
     }
 
     public static class GluonInitException extends RuntimeException {

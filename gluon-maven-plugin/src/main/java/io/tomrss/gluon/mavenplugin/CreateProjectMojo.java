@@ -57,7 +57,7 @@ public class CreateProjectMojo extends AbstractMojo {
             final GluonBuilder gluonBuilder = new GluonBuilder();
 
             // all this optional hassle means: let gluon builder set the defaults, don't bother here
-            Optional.ofNullable(customTemplates).map(Paths::get).ifPresent(gluonBuilder::customTemplates);
+            Optional.ofNullable(customTemplates).map(Paths::get).ifPresent(gluonBuilder::customTemplatesDirectory);
             Optional.ofNullable(projectDirectory).map(Paths::get).ifPresent(gluonBuilder::projectDirectory);
             Optional.ofNullable(projectGroupId).ifPresent(gluonBuilder::groupId);
             Optional.ofNullable(projectArtifactId).ifPresent(gluonBuilder::artifactId);
@@ -68,7 +68,7 @@ public class CreateProjectMojo extends AbstractMojo {
             Optional.ofNullable(imageRegistry).ifPresent(gluonBuilder::imageRegistry);
             Optional.ofNullable(databaseVendor).map(DatabaseVendor::valueOf).ifPresent(gluonBuilder::databaseVendor);
             Optional.ofNullable(templateExtension).ifPresent(gluonBuilder::templateExtension);
-            Optional.ofNullable(entities).map(Paths::get).ifPresent(gluonBuilder::readEntitiesFromJson);
+            Optional.ofNullable(entities).map(Paths::get).ifPresent(gluonBuilder::entityDirectory);
             Optional.ofNullable(archetype).ifPresent(gluonBuilder::archetype);
 
             gluonBuilder.createGluon().generateProject();

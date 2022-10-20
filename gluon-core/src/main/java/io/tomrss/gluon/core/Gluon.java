@@ -5,7 +5,7 @@ import io.tomrss.gluon.core.model.GlobalTemplateModel;
 import io.tomrss.gluon.core.model.ModelFactory;
 import io.tomrss.gluon.core.model.TemplateModel;
 import io.tomrss.gluon.core.spec.EntitySpec;
-import io.tomrss.gluon.core.spec.EntitySpecReader;
+import io.tomrss.gluon.core.spec.EntitySpecLoader;
 import io.tomrss.gluon.core.spec.ProjectSpec;
 import io.tomrss.gluon.core.template.StringTemplate;
 import io.tomrss.gluon.core.template.TemplateManager;
@@ -35,27 +35,27 @@ public class Gluon {
             ".mvn/wrapper/maven-wrapper.jar",
             ".mvn/wrapper/MavenWrapperDownloader.java"
     );
+    public static final String RAW_BASE_PATH = "raw/";
 
     private static final Predicate<String> IS_ENTITY_TEMPLATE = path -> ENTITY_TEMPLATE_PATTERN.matcher(path).find();
-    public static final String RAW_BASE_PATH = "raw/";
 
     private final TemplateManager templateManager;
     private final Path projectDirectory;
     private final ProjectSpec projectSpec;
     private final StringTemplate stringTemplate;
     private final String templateExtension;
-    private final EntitySpecReader entitySpecReader;
+    private final EntitySpecLoader entitySpecLoader;
 
     Gluon(TemplateManager templateManager,
           Path projectDirectory,
           ProjectSpec projectSpec,
           String templateExtension,
-          EntitySpecReader entitySpecReader) {
+          EntitySpecLoader entitySpecLoader) {
         this.templateManager = templateManager;
         this.projectDirectory = projectDirectory;
         this.projectSpec = projectSpec;
         this.templateExtension = templateExtension;
-        this.entitySpecReader = entitySpecReader;
+        this.entitySpecLoader = entitySpecLoader;
         // TODO this breaks the dependency inversion principle,
         //  however in current implementation is too dangerous to depend on abstraction
         this.stringTemplate = new StringTemplateImpl();
@@ -68,7 +68,7 @@ public class Gluon {
         }
         Files.createDirectory(projectDirectory);
 
-        final List<EntitySpec> entitySpecs = entitySpecReader.read();
+        final List<EntitySpec> entitySpecs = entitySpecLoader.load();
         final ModelFactory modelFactory = new ModelFactory(projectSpec);
         final TemplateModel templateModel = modelFactory.buildModelForEntities(entitySpecs);
 

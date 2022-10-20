@@ -2,9 +2,6 @@ package io.tomrss.gluon.core.model;
 
 public class Field {
 
-    Field() {
-    }
-
     String name;
     Class<?> type;
     boolean nullable;
@@ -12,6 +9,9 @@ public class Field {
     int length;
     String column;
     String sqlType;
+
+    Field() {
+    }
 
     public String getName() {
         return name;

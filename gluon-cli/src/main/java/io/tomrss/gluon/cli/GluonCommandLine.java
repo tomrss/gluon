@@ -2,8 +2,6 @@ package io.tomrss.gluon.cli;
 
 import io.tomrss.gluon.cli.command.CreateCommand;
 import io.tomrss.gluon.cli.logging.Logging;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
 import picocli.CommandLine.*;
 
@@ -14,8 +12,6 @@ import picocli.CommandLine.*;
         mixinStandardHelpOptions = true
 )
 public class GluonCommandLine {
-
-    private static final Logger LOG = LoggerFactory.getLogger(GluonCommandLine.class);
 
     @Option(names = {"-L", "--log-level"}, defaultValue = "info", description = "Log level")
     private String logLevel;

@@ -58,7 +58,7 @@
                             </platforms>
                             <programs>
                                 <program>
-                                    <mainClass>io.tomrss.gluon.cli.Main</mainClass>
+                                    <mainClass>io.tomrss.gluon.cli.GluonCommandLine</mainClass>
                                     <id>gluon</id>
                                 </program>
                             </programs>

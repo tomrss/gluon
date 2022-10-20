@@ -1,15 +1,10 @@
-package io.tomrss.gluon.cli;
+package io.tomrss.gluon.cli.command;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.ConsoleAppender;
+import io.tomrss.gluon.cli.GluonCommandLine;
 import io.tomrss.gluon.core.GluonBuilder;
 import io.tomrss.gluon.core.persistence.DatabaseVendor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
@@ -17,56 +12,52 @@ import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 
-@Command(name = "gluon", mixinStandardHelpOptions = true)
-public class Main implements Callable<Integer> {
+@Command(name = "create", description = "Create new project")
+public class CreateCommand implements Callable<Integer> {
 
-    public static final Logger LOG = LoggerFactory.getLogger(Main.class);
+    private static final Logger LOG = LoggerFactory.getLogger(GluonCommandLine.class);
 
-    @Option(names = {"-L", "--log-level"}, defaultValue = "info")
-    private String logLevel;
-
-    @Option(names = "--projectGroupId")
+    @Option(names = {"-g", "--projectGroupId"}, description = "Maven group id of generated project")
     private String projectGroupId;
 
-    @Option(names = "--projectArtifactId")
+    @Option(names = {"-p", "--projectArtifactId"}, description = "Maven artifact id of generated project")
     private String projectArtifactId;
 
-    @Option(names = "--projectVersion")
+    @Option(names = {"-v", "--projectVersion"}, description = "Maven version of generated project")
     private String projectVersion;
 
-    @Option(names = "--projectFriendlyName")
+    @Option(names = {"-n", "--projectFriendlyName"}, description = "Friendly name of the project")
     private String projectFriendlyName;
 
-    @Option(names = "--projectDescription")
+    @Option(names = {"-D", "--projectDescription"}, description = "Description of the project")
     private String projectDescription;
 
-    @Option(names = "--basePackage")
+    @Option(names = {"-b", "--basePackage"}, description = "Base package of Java sources")
     private String basePackage;
 
-    @Option(names = "--customTemplates")
+    @Option(names = {"-t", "--customTemplates"}, description = "Directory of custom templates")
     private String customTemplates;
 
-    @Option(names = "--projectDirectory")
+    @Option(names = {"-P", "--projectDirectory"}, description = "Directory of generated project, must be non-existing")
     private String projectDirectory;
 
-    @Option(names = "--imageRegistry")
+    @Option(names = {"-i", "--imageRegistry"}, description = "Image registry where to store project images")
     private String imageRegistry;
 
-    @Option(names = "--databaseVendor")
+    @Option(names = {"-d", "--databaseVendor"}, description = "Database vendor used in generated project")
     private String databaseVendor;
 
-    @Option(names = "--templateExtension")
+    @Option(names = {"-x", "--templateExtension"}, description = "Extension of the template files. Can be used only with custom templates")
     private String templateExtension;
 
-    @Option(names = "--entities")
+    @Option(names = {"-e", "--entities"}, description = "Directory where to find entity specification files", required = true)
     private String entities;
 
-    @Option(names = "--archetype")
+    @Option(names = {"-a", "--archetype"}, description = "Archetype (i.e. set of default templates) to use. Cannot be used with custom templates")
     private String archetype;
 
     @Override
     public Integer call() throws Exception {
-        configureLogger();
         try {
             final GluonBuilder gluonBuilder = new GluonBuilder();
 
@@ -96,30 +87,5 @@ public class Main implements Callable<Integer> {
             }
             return 1;
         }
-    }
-
-    private void configureLogger() {
-        final ch.qos.logback.classic.Logger rootLogger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME);
-        final LoggerContext logCtx = (LoggerContext) LoggerFactory.getILoggerFactory();
-
-        final PatternLayoutEncoder logEncoder = new PatternLayoutEncoder();
-        logEncoder.setContext(logCtx);
-        logEncoder.setPattern("[%-5level] %msg%n");
-        logEncoder.start();
-
-        final ConsoleAppender<ILoggingEvent> consoleAppender = new ConsoleAppender<>();
-        consoleAppender.setContext(logCtx);
-        consoleAppender.setName("console");
-        consoleAppender.setEncoder(logEncoder);
-        consoleAppender.start();
-
-        rootLogger.setLevel(Level.toLevel(logLevel));
-        rootLogger.detachAndStopAllAppenders();
-        rootLogger.addAppender(consoleAppender);
-    }
-
-    public static void main(String[] args) {
-        int exitCode = new CommandLine(new Main()).execute(args);
-        System.exit(exitCode);
     }
 }

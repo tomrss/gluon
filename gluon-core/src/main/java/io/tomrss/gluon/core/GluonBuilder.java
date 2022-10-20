@@ -186,6 +186,9 @@ public class GluonBuilder {
             // do not tell the client that it can mock entities, for avoiding strange messages in cli and maven plugin
             failedValidations.add("Entity directory is required");
         }
+        if (templateExtension != null && customTemplatesDirectory == null) {
+            failedValidations.add("Cannot specify template extension when using default templates (archetypes)");
+        }
 
         if (!failedValidations.isEmpty()) {
             throw new IllegalArgumentException("Validations failed: " +

@@ -11,6 +11,8 @@ import io.tomrss.gluon.core.template.StringTemplate;
 import io.tomrss.gluon.core.template.TemplateManager;
 import io.tomrss.gluon.core.template.impl.StringTemplateImpl;
 import org.apache.commons.io.FileExistsException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -21,6 +23,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static io.tomrss.gluon.core.template.impl.StringTemplateImpl.ENTITY_TEMPLATE_PATTERN;
 
@@ -36,6 +39,8 @@ public class Gluon {
             ".mvn/wrapper/MavenWrapperDownloader.java"
     );
     public static final String RAW_BASE_PATH = "raw/";
+
+    private static final Logger LOG = LoggerFactory.getLogger(Gluon.class);
 
     private static final Predicate<String> IS_ENTITY_TEMPLATE = path -> ENTITY_TEMPLATE_PATTERN.matcher(path).find();
 
@@ -56,41 +61,56 @@ public class Gluon {
         this.projectSpec = projectSpec;
         this.templateExtension = templateExtension;
         this.entitySpecLoader = entitySpecLoader;
-        // TODO this breaks the dependency inversion principle,
-        //  however in current implementation is too dangerous to depend on abstraction
+        // this breaks the dependency inversion principle, but in current impl is too dangerous to depend on abstraction
         this.stringTemplate = new StringTemplateImpl();
     }
 
     public void generateProject() throws IOException {
-        if (Files.exists(projectDirectory)) {
-            throw new FileExistsException("Directory of generated project already exists: " +
-                    projectDirectory.toAbsolutePath());
-        }
-        Files.createDirectory(projectDirectory);
+        LOG.info("Generating project {} in directory {} ...", projectSpec.artifactId(), projectDirectory.toAbsolutePath());
+        checkProjectDirectory();
+        final List<EntitySpec> entitySpecs = loadEntities();
+        final TemplateModel templateModel = initTemplateModel(entitySpecs);
+        extractRawFiles();
+        generateSources(templateModel);
+        LOG.info("Project {} generated.", projectSpec.artifactId());
+    }
 
-        final List<EntitySpec> entitySpecs = entitySpecLoader.load();
+    private TemplateModel initTemplateModel(List<EntitySpec> entitySpecs) {
         final ModelFactory modelFactory = new ModelFactory(projectSpec);
         final TemplateModel templateModel = modelFactory.buildModelForEntities(entitySpecs);
-
-        copyRawFiles();
-        generateSources(templateModel);
+        LOG.info("Template model initialized");
+        return templateModel;
     }
 
-    private void generateSources(TemplateModel templateModel) throws IOException {
-        final List<String> templates = templateManager.listTemplates(templateExtension);
-        generateGlobalSources(templateModel.getGlobalModel(), templates);
-        generateEntitySources(templateModel.getEntityModels(), templates);
+    private List<EntitySpec> loadEntities() throws IOException {
+        final List<EntitySpec> entitySpecs = entitySpecLoader.load();
+        if (LOG.isInfoEnabled()) {
+            LOG.info("Loaded {} entities: {}", entitySpecs.size(), entitySpecs.stream()
+                    .map(EntitySpec::name)
+                    .collect(Collectors.joining(", ")));
+        }
+        return entitySpecs;
     }
 
-    private void copyRawFiles() throws IOException {
+    private void checkProjectDirectory() throws IOException {
+        if (Files.exists(projectDirectory)) {
+            throw new FileExistsException("Directory of project already exists: " + projectDirectory.toAbsolutePath());
+        }
+        Files.createDirectory(projectDirectory);
+    }
+
+    private void extractRawFiles() throws IOException {
+        LOG.info("Extracting raw files...");
         final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-        for (String rawFilesResource : RAW_FILES_RESOURCES) {
-            final URL resource = classLoader.getResource(RAW_BASE_PATH + rawFilesResource);
+        for (String rawFileResource : RAW_FILES_RESOURCES) {
+            final URL resource = classLoader.getResource(RAW_BASE_PATH + rawFileResource);
             if (resource == null) {
-                throw new IllegalArgumentException("Resource " + rawFilesResource + " is required");
+                // this is a very severe implementation error, should never happen at runtime
+                throw new IllegalStateException("Raw file resource " + rawFileResource + " is required");
             }
-            final Path targetFile = projectDirectory.resolve(rawFilesResource);
+            final Path targetFile = projectDirectory.resolve(rawFileResource);
             mkdirs(targetFile);
+            LOG.debug("Extracting raw file {} to {}", rawFileResource, targetFile);
             try (final InputStream inputStream = resource.openStream();
                  final OutputStream outputStream = new FileOutputStream(targetFile.toFile())) {
                 byte[] buffer = new byte[8 * 1024];
@@ -100,26 +120,41 @@ public class Gluon {
                 }
             }
         }
+        LOG.info("Extracted {} raw files.", RAW_FILES_RESOURCES.size());
+    }
+
+    private void generateSources(TemplateModel templateModel) throws IOException {
+        final List<String> templates = templateManager.listTemplates(templateExtension);
+        generateGlobalSources(templateModel.getGlobalModel(), templates);
+        generateEntitySources(templateModel.getEntityModels(), templates);
     }
 
     private void generateGlobalSources(GlobalTemplateModel model, List<String> templateFiles) throws IOException {
+        LOG.info("Generating global sources...");
         final List<String> globalTemplates = templateFiles.stream()
                 .filter(IS_ENTITY_TEMPLATE.negate())
                 .toList();
         for (String globalTemplate : globalTemplates) {
             renderTemplate(globalTemplate, model);
         }
+        LOG.info("Generated {} global sources.", globalTemplates.size());
     }
 
     private void generateEntitySources(List<EntityTemplateModel> models, List<String> templateFiles) throws IOException {
+        LOG.info("Generating entity sources...");
         final List<String> entityTemplates = templateFiles.stream()
                 .filter(IS_ENTITY_TEMPLATE)
                 .toList();
-        for (String entityTemplate : entityTemplates) {
-            for (EntityTemplateModel model : models) {
+        LOG.debug("Found {} entity templates", entityTemplates.size());
+        int count = 0;
+        for (EntityTemplateModel model : models) {
+            LOG.debug("Generating sources for entity {}", model.getEntity().getName());
+            for (String entityTemplate : entityTemplates) {
                 renderTemplate(entityTemplate, model);
+                count++;
             }
         }
+        LOG.info("Generated {} entity sources.", count);
     }
 
     private void renderTemplate(String templateName, Object model) throws IOException {

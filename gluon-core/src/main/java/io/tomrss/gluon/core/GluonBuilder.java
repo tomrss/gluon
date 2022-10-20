@@ -11,6 +11,8 @@ import io.tomrss.gluon.core.template.TemplateManager;
 import io.tomrss.gluon.core.template.impl.FileFreemarkerTemplateManager;
 import io.tomrss.gluon.core.template.impl.GluonArchetypeTemplateManager;
 import io.tomrss.gluon.core.util.CaseUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -23,6 +25,8 @@ import java.util.stream.Stream;
 
 @SuppressWarnings("java:S1192") // I like to duplicate string literals for the sake of readability
 public class GluonBuilder {
+
+    private static final Logger LOG = LoggerFactory.getLogger(GluonBuilder.class);
 
     public static final Pattern ARTIFACT_ID_PATTERN = Pattern.compile("^[a-z]+(-[a-z]+)*$");
     public static final Pattern PACKAGE_PATTERN = Pattern.compile("^[a-z]+(\\.[a-z]+)*$");
@@ -193,39 +197,50 @@ public class GluonBuilder {
         if (templateManager == null) {
             if (customTemplatesDirectory != null) {
                 templateManager = new FileFreemarkerTemplateManager(customTemplatesDirectory);
+                LOG.debug("Using Freemarker file template renderer from directory of custom templates: {}", customTemplatesDirectory.toAbsolutePath());
             } else {
                 final String archetypeName = Objects.requireNonNullElse(archetype, DEFAULT_ARCHETYPE);
                 final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
                 templateManager = new GluonArchetypeTemplateManager(classLoader, archetypeName);
+                LOG.debug("Using Freemarker resource template renderer for archetype " + archetypeName);
             }
         }
         if (entityFormat == null) {
             entityFormat = DEFAULT_FORMAT;
+            LOG.debug("No entity format specified, using default: {}", entityFormat);
         }
         if (groupId == null) {
             groupId = DEFAULT_GROUP_ID;
+            LOG.debug("No groupId specified, using default: {}", groupId);
         }
         if (artifactId == null) {
             artifactId = DEFAULT_ARTIFACT_ID;
+            LOG.debug("No artifactId specified, using default: {}", artifactId);
         }
         if (version == null) {
             version = DEFAULT_VERSION;
+            LOG.debug("No version specified, using default: {}", version);
         }
         if (projectDirectory == null) {
             // use artifactId relative path as default for generation directory
             projectDirectory = Paths.get(artifactId);
+            LOG.debug("No project directory specified, using artifactId as relative path: {}", projectDirectory.toAbsolutePath());
         }
         if (friendlyName == null) {
             friendlyName = CaseUtils.hyphenSeparatedToDescriptive(artifactId);
+            LOG.debug("No friendly name specified, using default parsed from artifact id: {}", friendlyName);
         }
         if (basePackage == null) {
             basePackage = groupId + "." + artifactId.replace("-", "");
+            LOG.debug("No base package specified, using default from groupId and artifactId: {}", basePackage);
         }
         if (databaseVendor == null) {
             databaseVendor = DatabaseVendor.POSTGRESQL;
+            LOG.debug("No database vendor specified, using default: {}", databaseVendor);
         }
         if (templateExtension == null) {
             templateExtension = DEFAULT_TEMPLATE_EXTENSION;
+            LOG.debug("No template extension specified, using default: {}", templateExtension);
         }
     }
 

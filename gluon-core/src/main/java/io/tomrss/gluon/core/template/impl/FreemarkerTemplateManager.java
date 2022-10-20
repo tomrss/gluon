@@ -7,6 +7,8 @@ import freemarker.template.TemplateException;
 import freemarker.template.TemplateExceptionHandler;
 import io.tomrss.gluon.core.template.GluonTemplateException;
 import io.tomrss.gluon.core.template.TemplateManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -14,6 +16,8 @@ import java.io.Writer;
 import java.nio.file.Path;
 
 public abstract class FreemarkerTemplateManager implements TemplateManager {
+
+    private static final Logger LOG = LoggerFactory.getLogger(FreemarkerTemplateManager.class);
 
     private final Configuration freemarker;
 
@@ -32,8 +36,7 @@ public abstract class FreemarkerTemplateManager implements TemplateManager {
         final Template template = freemarker.getTemplate(templateName);
         try (final Writer writer = new FileWriter(outputFile.toFile())) {
             template.process(model, writer);
-            // TODO logger
-            System.out.println("Template " + templateName + " rendered to file " + outputFile);
+            LOG.debug("Template {} rendered to file {}", templateName, outputFile);
         } catch (TemplateException e) {
             throw new GluonTemplateException(e);
         }

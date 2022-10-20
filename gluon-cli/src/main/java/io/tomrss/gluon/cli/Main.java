@@ -1,7 +1,14 @@
 package io.tomrss.gluon.cli;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.ConsoleAppender;
 import io.tomrss.gluon.core.GluonBuilder;
 import io.tomrss.gluon.core.persistence.DatabaseVendor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -12,6 +19,11 @@ import java.util.concurrent.Callable;
 
 @Command(name = "gluon", mixinStandardHelpOptions = true)
 public class Main implements Callable<Integer> {
+
+    public static final Logger LOG = LoggerFactory.getLogger(Main.class);
+
+    @Option(names = {"-L", "--log-level"}, defaultValue = "info")
+    private String logLevel;
 
     @Option(names = "--projectGroupId")
     private String projectGroupId;
@@ -54,6 +66,7 @@ public class Main implements Callable<Integer> {
 
     @Override
     public Integer call() throws Exception {
+        configureLogger();
         try {
             final GluonBuilder gluonBuilder = new GluonBuilder();
 
@@ -75,9 +88,34 @@ public class Main implements Callable<Integer> {
             gluonBuilder.createGluon().generateProject();
             return 0;
         } catch (Exception e) {
-            e.printStackTrace();
+            if (LOG.isDebugEnabled()) {
+                LOG.error("Unable to generate project", e);
+            } else {
+                // do not print stack trace
+                LOG.error("Unable to generate project: " + e.getMessage());
+            }
             return 1;
         }
+    }
+
+    private void configureLogger() {
+        final ch.qos.logback.classic.Logger rootLogger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME);
+        final LoggerContext logCtx = (LoggerContext) LoggerFactory.getILoggerFactory();
+
+        final PatternLayoutEncoder logEncoder = new PatternLayoutEncoder();
+        logEncoder.setContext(logCtx);
+        logEncoder.setPattern("[%-5level] %msg%n");
+        logEncoder.start();
+
+        final ConsoleAppender<ILoggingEvent> consoleAppender = new ConsoleAppender<>();
+        consoleAppender.setContext(logCtx);
+        consoleAppender.setName("console");
+        consoleAppender.setEncoder(logEncoder);
+        consoleAppender.start();
+
+        rootLogger.setLevel(Level.toLevel(logLevel));
+        rootLogger.detachAndStopAllAppenders();
+        rootLogger.addAppender(consoleAppender);
     }
 
     public static void main(String[] args) {

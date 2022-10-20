@@ -1,16 +1,14 @@
 package io.tomrss.gluon.core;
 
 import io.tomrss.gluon.core.persistence.DatabaseVendor;
-import io.tomrss.gluon.core.spec.EntitySpec;
-import io.tomrss.gluon.core.spec.EntitySpecLoader;
-import io.tomrss.gluon.core.spec.ProjectSpec;
-import io.tomrss.gluon.core.spec.SpecFormat;
+import io.tomrss.gluon.core.spec.*;
 import io.tomrss.gluon.core.spec.impl.JacksonEntitySpecLoader;
 import io.tomrss.gluon.core.spec.impl.MockEntitySpecLoader;
 import io.tomrss.gluon.core.template.TemplateManager;
 import io.tomrss.gluon.core.template.impl.FileFreemarkerTemplateManager;
 import io.tomrss.gluon.core.template.impl.GluonArchetypeTemplateManager;
 import io.tomrss.gluon.core.util.CaseUtils;
+import io.tomrss.gluon.core.util.ResourceUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +29,7 @@ public class GluonBuilder {
     public static final Pattern ARTIFACT_ID_PATTERN = Pattern.compile("^[a-z]+(-[a-z]+)*$");
     public static final Pattern PACKAGE_PATTERN = Pattern.compile("^[a-z]+(\\.[a-z]+)*$");
 
-    public static final String DEFAULT_ARCHETYPE = "quarkus-gluon-default";
+    public static final String DEFAULT_ARCHETYPE = "quarkus";
     public static final String DEFAULT_GROUP_ID = "org.acme";
     public static final String DEFAULT_ARTIFACT_ID = "gluon-example";
     public static final String DEFAULT_VERSION = "0.1.0";
@@ -39,6 +37,7 @@ public class GluonBuilder {
     public static final SpecFormat DEFAULT_FORMAT = SpecFormat.JSON;
 
     private TemplateManager templateManager;
+    private ProjectType projectType;
     private Path customTemplatesDirectory;
     private Path projectDirectory;
     private Path entityDirectory;
@@ -57,6 +56,16 @@ public class GluonBuilder {
 
     public GluonBuilder templateManager(TemplateManager templateManager) {
         this.templateManager = templateManager;
+        return this;
+    }
+
+    public GluonBuilder projectType(ProjectType projectType) {
+        this.projectType = projectType;
+        return this;
+    }
+
+    public GluonBuilder projectType(String projectType) {
+        this.projectType = ProjectType.from(projectType);
         return this;
     }
 
@@ -148,6 +157,7 @@ public class GluonBuilder {
                     ? new JacksonEntitySpecLoader(entityDirectory, entityFormat)
                     : new MockEntitySpecLoader(mockEntities);
             return new Gluon(templateManager,
+                    projectType,
                     projectDirectory,
                     new ProjectSpec(groupId,
                             artifactId,
@@ -203,10 +213,12 @@ public class GluonBuilder {
                 LOG.debug("Using Freemarker file template renderer from directory of custom templates: {}", customTemplatesDirectory.toAbsolutePath());
             } else {
                 final String archetypeName = Objects.requireNonNullElse(archetype, DEFAULT_ARCHETYPE);
-                final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-                templateManager = new GluonArchetypeTemplateManager(classLoader, archetypeName);
+                templateManager = new GluonArchetypeTemplateManager(ResourceUtils.CLASS_LOADER, archetypeName);
                 LOG.debug("Using Freemarker resource template renderer for archetype " + archetypeName);
             }
+        }
+        if (projectType == null) {
+            projectType = ProjectType.MAVEN;
         }
         if (entityFormat == null) {
             entityFormat = DEFAULT_FORMAT;

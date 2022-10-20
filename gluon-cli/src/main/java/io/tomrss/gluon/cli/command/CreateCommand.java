@@ -56,6 +56,9 @@ public class CreateCommand implements Callable<Integer> {
     @Option(names = {"-a", "--archetype"}, description = "Archetype (i.e. set of default templates) to use. Cannot be used with custom templates")
     private String archetype;
 
+    @Option(names = {"-T", "--projectType"}, description = "Type of project")
+    private String projectType;
+
     @Override
     public Integer call() throws Exception {
         try {
@@ -75,6 +78,7 @@ public class CreateCommand implements Callable<Integer> {
             Optional.ofNullable(templateExtension).ifPresent(gluonBuilder::templateExtension);
             Optional.ofNullable(entities).map(Paths::get).ifPresent(gluonBuilder::entityDirectory);
             Optional.ofNullable(archetype).ifPresent(gluonBuilder::archetype);
+            Optional.ofNullable(projectType).ifPresent(gluonBuilder::projectType);
 
             gluonBuilder.createGluon().generateProject();
             return 0;

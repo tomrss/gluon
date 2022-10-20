@@ -7,18 +7,16 @@ import io.tomrss.gluon.core.model.TemplateModel;
 import io.tomrss.gluon.core.spec.EntitySpec;
 import io.tomrss.gluon.core.spec.EntitySpecLoader;
 import io.tomrss.gluon.core.spec.ProjectSpec;
+import io.tomrss.gluon.core.spec.ProjectType;
 import io.tomrss.gluon.core.template.StringTemplate;
 import io.tomrss.gluon.core.template.TemplateManager;
 import io.tomrss.gluon.core.template.impl.StringTemplateImpl;
+import io.tomrss.gluon.core.util.ResourceUtils;
 import org.apache.commons.io.FileExistsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -39,12 +37,14 @@ public class Gluon {
             ".mvn/wrapper/MavenWrapperDownloader.java"
     );
     public static final String RAW_BASE_PATH = "raw/";
+    public static final String RAW_METADATA_FILENAME = "raw-metadata.txt";
 
     private static final Logger LOG = LoggerFactory.getLogger(Gluon.class);
 
     private static final Predicate<String> IS_ENTITY_TEMPLATE = path -> ENTITY_TEMPLATE_PATTERN.matcher(path).find();
 
     private final TemplateManager templateManager;
+    private final ProjectType projectType;
     private final Path projectDirectory;
     private final ProjectSpec projectSpec;
     private final StringTemplate stringTemplate;
@@ -52,11 +52,13 @@ public class Gluon {
     private final EntitySpecLoader entitySpecLoader;
 
     Gluon(TemplateManager templateManager,
+          ProjectType projectType,
           Path projectDirectory,
           ProjectSpec projectSpec,
           String templateExtension,
           EntitySpecLoader entitySpecLoader) {
         this.templateManager = templateManager;
+        this.projectType = projectType;
         this.projectDirectory = projectDirectory;
         this.projectSpec = projectSpec;
         this.templateExtension = templateExtension;
@@ -101,24 +103,13 @@ public class Gluon {
 
     private void extractRawFiles() throws IOException {
         LOG.info("Extracting raw files...");
-        final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-        for (String rawFileResource : RAW_FILES_RESOURCES) {
-            final URL resource = classLoader.getResource(RAW_BASE_PATH + rawFileResource);
-            if (resource == null) {
-                // this is a very severe implementation error, should never happen at runtime
-                throw new IllegalStateException("Raw file resource " + rawFileResource + " is required");
-            }
-            final Path targetFile = projectDirectory.resolve(rawFileResource);
-            mkdirs(targetFile);
-            LOG.debug("Extracting raw file {} to {}", rawFileResource, targetFile);
-            try (final InputStream inputStream = resource.openStream();
-                 final OutputStream outputStream = new FileOutputStream(targetFile.toFile())) {
-                byte[] buffer = new byte[8 * 1024];
-                int bytesRead;
-                while ((bytesRead = inputStream.read(buffer)) != -1) {
-                    outputStream.write(buffer, 0, bytesRead);
-                }
-            }
+        final String rawPackage = RAW_BASE_PATH + projectType.name().toLowerCase() + "/";
+        final List<String> rawFilesResources = ResourceUtils.readMetadataFile(rawPackage + RAW_METADATA_FILENAME);
+        for (String rawFileResource : rawFilesResources) {
+            final Path target = projectDirectory.resolve(rawFileResource);
+            LOG.debug("Extracting raw file {} to {}", rawFileResource, target);
+            mkdirs(target);
+            ResourceUtils.extractResource(rawPackage + rawFileResource, target);
         }
         LOG.info("Extracted {} raw files.", RAW_FILES_RESOURCES.size());
     }
@@ -173,7 +164,7 @@ public class Gluon {
         return projectDirectory.resolve(resolvedWithoutGluonExtension);
     }
 
-    private void mkdirs(Path targetFile) throws IOException {
+    private static void mkdirs(Path targetFile) throws IOException {
         final Path targetFileParent = targetFile.getParent();
         if (targetFileParent != null) {
             Files.createDirectories(targetFileParent);

@@ -31,7 +31,6 @@ import java.util.stream.Stream;
 public class GluonBuilder {
     // TODO sonarlint says these regex can overflow stack for large inputs, find another
     public static final Pattern ARTIFACT_ID_PATTERN = Pattern.compile("^[a-z]+(-[a-z]+)*$");
-    public static final Pattern GROUP_ID_PATTERN = Pattern.compile("^[a-z]+(\\.[a-z]+)*$");
     public static final Pattern PACKAGE_PATTERN = Pattern.compile("^[a-z]+(\\.[a-z]+)*$");
 
     public static final List<Path> DEFAULT_ENTITY_FOLDERS = List.of(
@@ -189,18 +188,14 @@ public class GluonBuilder {
         if (countOfNonNullTemplateProperties > 1) {
             failedValidations.add("Properties 'templateManager', 'archetype', 'customTemplates' are mutually exclusive");
         }
-        if (artifactId == null) {
-            failedValidations.add("artifactId is required");
-        } else if (!ARTIFACT_ID_PATTERN.matcher(artifactId).matches()) {
-            failedValidations.add("artifactId should match regex" + ARTIFACT_ID_PATTERN);
+        if (artifactId != null && !ARTIFACT_ID_PATTERN.matcher(artifactId).matches()) {
+            failedValidations.add("Project artifact id should match regex" + ARTIFACT_ID_PATTERN);
         }
-        if (groupId == null) {
-            failedValidations.add("groupId is required");
-        } else if (!GROUP_ID_PATTERN.matcher(groupId).matches()) {
-            failedValidations.add("groupId should match regex" + GROUP_ID_PATTERN);
+        if (groupId != null && !PACKAGE_PATTERN.matcher(groupId).matches()) {
+            failedValidations.add("Project group id should match regex" + PACKAGE_PATTERN);
         }
         if (basePackage != null && !PACKAGE_PATTERN.matcher(basePackage).matches()) {
-            failedValidations.add("basePackage should match regex" + PACKAGE_PATTERN);
+            failedValidations.add("Base package should match regex" + PACKAGE_PATTERN);
         }
 
         if (!failedValidations.isEmpty()) {
@@ -222,6 +217,12 @@ public class GluonBuilder {
         if (projectDirectory == null) {
             // use artifactId relative path as default for generation directory
             projectDirectory = Paths.get(artifactId);
+        }
+        if (groupId == null) {
+            groupId = "org.acme";
+        }
+        if (artifactId == null) {
+            artifactId = "gluon-example";
         }
         if (version == null) {
             version = "0.1.0";

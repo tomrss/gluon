@@ -29,14 +29,16 @@ import java.util.stream.Stream;
 
 @SuppressWarnings("java:S1192") // I like to duplicate string literals for the sake of readability
 public class GluonBuilder {
-    // TODO sonarlint says these regex can overflow stack for large inputs, find another
+
     public static final Pattern ARTIFACT_ID_PATTERN = Pattern.compile("^[a-z]+(-[a-z]+)*$");
     public static final Pattern PACKAGE_PATTERN = Pattern.compile("^[a-z]+(\\.[a-z]+)*$");
 
-    public static final List<Path> DEFAULT_ENTITY_FOLDERS = List.of(
-            Paths.get(".gluon", "entity")
-    );
     public static final String DEFAULT_ARCHETYPE = "quarkus-gluon-default";
+    public static final String DEFAULT_GROUP_ID = "org.acme";
+    public static final String DEFAULT_ARTIFACT_ID = "gluon-example";
+    public static final String DEFAULT_VERSION = "0.1.0";
+    public static final String DEFAULT_TEMPLATE_EXTENSION = ".gluon";
+    public static final List<Path> DEFAULT_ENTITY_FOLDERS = List.of(Paths.get(".gluon", "entity"));
 
     private TemplateManager templateManager;
     private Path customTemplatesDirectory;
@@ -219,13 +221,13 @@ public class GluonBuilder {
             projectDirectory = Paths.get(artifactId);
         }
         if (groupId == null) {
-            groupId = "org.acme";
+            groupId = DEFAULT_GROUP_ID;
         }
         if (artifactId == null) {
-            artifactId = "gluon-example";
+            artifactId = DEFAULT_ARTIFACT_ID;
         }
         if (version == null) {
-            version = "0.1.0";
+            version = DEFAULT_VERSION;
         }
         if (friendlyName == null) {
             friendlyName = CaseUtils.hyphenSeparatedToDescriptive(artifactId);
@@ -237,7 +239,7 @@ public class GluonBuilder {
             databaseVendor = DatabaseVendor.POSTGRESQL;
         }
         if (templateExtension == null) {
-            templateExtension = ".gluon";
+            templateExtension = DEFAULT_TEMPLATE_EXTENSION;
         }
         if (entitySpecReader == null) {
             final Path entityDirectory = getFirstExistingDirectory("entity", DEFAULT_ENTITY_FOLDERS);

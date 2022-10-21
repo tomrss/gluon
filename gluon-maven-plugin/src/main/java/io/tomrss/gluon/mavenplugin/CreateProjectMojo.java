@@ -52,6 +52,9 @@ public class CreateProjectMojo extends AbstractMojo {
     @Parameter(property = "archetype")
     private String archetype;
 
+    @Parameter(property = "projectType")
+    private String projectType;
+
     public void execute() throws MojoExecutionException {
         try {
             final GluonBuilder gluonBuilder = new GluonBuilder();
@@ -70,6 +73,7 @@ public class CreateProjectMojo extends AbstractMojo {
             Optional.ofNullable(templateExtension).ifPresent(gluonBuilder::templateExtension);
             Optional.ofNullable(entities).map(Paths::get).ifPresent(gluonBuilder::entityDirectory);
             Optional.ofNullable(archetype).ifPresent(gluonBuilder::archetype);
+            Optional.ofNullable(projectType).ifPresent(gluonBuilder::projectType);
 
             gluonBuilder.createGluon().generateProject();
         } catch (Exception e) {

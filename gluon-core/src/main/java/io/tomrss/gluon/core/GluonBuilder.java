@@ -3,7 +3,6 @@ package io.tomrss.gluon.core;
 import io.tomrss.gluon.core.persistence.DatabaseVendor;
 import io.tomrss.gluon.core.spec.*;
 import io.tomrss.gluon.core.spec.impl.JacksonEntitySpecLoader;
-import io.tomrss.gluon.core.spec.impl.MockEntitySpecLoader;
 import io.tomrss.gluon.core.template.TemplateManager;
 import io.tomrss.gluon.core.template.impl.FileFreemarkerTemplateManager;
 import io.tomrss.gluon.core.template.impl.GluonArchetypeTemplateManager;
@@ -16,6 +15,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.regex.Pattern;
@@ -153,9 +153,7 @@ public class GluonBuilder {
         try {
             validateBuild();
             setDefaults();
-            final EntitySpecLoader entitySpecLoader = mockEntities == null
-                    ? new JacksonEntitySpecLoader(entityDirectory, entityFormat)
-                    : new MockEntitySpecLoader(mockEntities);
+            final EntitySpecLoader entitySpecLoader = buildEntityLoader();
             return new Gluon(templateManager,
                     projectType,
                     projectDirectory,
@@ -191,10 +189,6 @@ public class GluonBuilder {
         }
         if (basePackage != null && !PACKAGE_PATTERN.matcher(basePackage).matches()) {
             failedValidations.add("Base package should match regex" + PACKAGE_PATTERN);
-        }
-        if (entityDirectory == null && mockEntities == null) {
-            // do not tell the client that it can mock entities, for avoiding strange messages in cli and maven plugin
-            failedValidations.add("Entity directory is required");
         }
         if (templateExtension != null && customTemplatesDirectory == null) {
             failedValidations.add("Cannot specify template extension when using default templates (archetypes)");
@@ -257,6 +251,17 @@ public class GluonBuilder {
             templateExtension = DEFAULT_TEMPLATE_EXTENSION;
             LOG.debug("No template extension specified, using default: {}", templateExtension);
         }
+    }
+
+    private EntitySpecLoader buildEntityLoader() {
+        if (mockEntities != null) {
+            return () -> mockEntities;
+        }
+        if (entityDirectory != null) {
+            return new JacksonEntitySpecLoader(entityDirectory, entityFormat);
+        }
+        // no entity configured
+        return Collections::emptyList;
     }
 
     public static class GluonInitException extends RuntimeException {

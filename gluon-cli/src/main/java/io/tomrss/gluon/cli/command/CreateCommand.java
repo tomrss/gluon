@@ -50,7 +50,7 @@ public class CreateCommand implements Callable<Integer> {
     @Option(names = {"-x", "--templateExtension"}, description = "Extension of the template files. Can be used only with custom templates")
     private String templateExtension;
 
-    @Option(names = {"-e", "--entities"}, description = "Directory where to find entity specification files", required = true)
+    @Option(names = {"-e", "--entities"}, description = "Directory where to find entity specification files")
     private String entities;
 
     @Option(names = {"-a", "--archetype"}, description = "Archetype (i.e. set of default templates) to use. Cannot be used with custom templates")

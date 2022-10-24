@@ -1,0 +1,10 @@
+package ${project.basePackage}.mapper;
+
+import ${project.basePackage}.domain.${entity.name};
+import ${project.basePackage}.dto.${entity.name}Dto;
+import org.mapstruct.Mapper;
+
+@Mapper(componentModel = "cdi")
+public interface ${entity.name}Mapper extends EntityMapper<${entity.name}, ${entity.name}Dto> {
+
+}

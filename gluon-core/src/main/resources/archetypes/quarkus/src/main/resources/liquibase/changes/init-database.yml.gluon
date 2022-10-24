@@ -29,15 +29,13 @@ databaseChangeLog:
               unique: ${field.unique?then('true', 'false')}
             </#if>
         </#list>
-        <#list entity.relations?filter(r -> r.type != 'MANY_TO_MANY') as relation>
+        <#list entity.relations?filter(r -> r.type == 'MANY_TO_ONE' || r.type == 'ONE_TO_ONE') as relation>
         - column:
             name: ${relation.joinColumn}
             type: ${entity.idSqlType}
             constraints:
               foreignKeyName: ${relation.foreignKeyName}
               references: ${relation.targetEntity.table}(id)
-              nullable: ${relation.nullable?then('true', 'false')}
-              unique: ${relation.unique?then('true', 'false')}
         </#list>
     <#list entity.indexes as index>
     - createIndex:

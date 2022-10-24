@@ -1,0 +1,9 @@
+package ${project.basePackage}.dto;
+
+public class ${entity.name}Dto {
+
+    public Long id;
+    <#list entity.fields as field>
+    public ${field.type.name?remove_beginning('java.lang.')} ${field.name};
+    </#list>
+}

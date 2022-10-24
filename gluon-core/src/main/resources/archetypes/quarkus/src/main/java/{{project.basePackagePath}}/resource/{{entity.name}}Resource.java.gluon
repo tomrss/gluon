@@ -1,7 +1,11 @@
 package ${project.basePackage}.resource;
 
-import ${project.basePackage}.domain.${entity.name};
+import ${project.basePackage}.dto.${entity.name}Dto;
 import ${project.basePackage}.service.${entity.name}Service;
+<#list entity.relations as relation>
+// TODO possible duplication from different relations with same entity
+import ${project.basePackage}.dto.${relation.targetEntity.name}Dto;
+</#list>
 
 import javax.inject.Inject;
 import javax.ws.rs.*;
@@ -19,27 +23,34 @@ public class ${entity.name}Resource {
     ${entity.name}Service service;
 
     @GET
-    public List<${entity.name}> list() {
+    public List<${entity.name}Dto> list() {
         return service.getAll();
     }
 
     @GET
     @Path("/{id}")
-    public ${entity.name} get(Long id) {
+    public ${entity.name}Dto get(Long id) {
         return service.get(id)
                 .orElseThrow(NotFoundException::new);
     }
 
     @POST
-    public Response create(${entity.name} entity) {
-        service.create(entity);
-        return Response.created(URI.create("/api/${entity.resourcePath}/" + entity.id)).build();
+    public Response create(${entity.name}Dto entity) {
+        final ${entity.name}Dto created = service.create(entity);
+        return Response.created(URI.create("/api/${entity.resourcePath}/" + created.id)).build();
     }
     
     @PUT
     @Path("/{id}")
-    public Response update(Long id, ${entity.name} entity) {
+    public Response update(Long id, ${entity.name}Dto entity) {
         service.update(id, entity);
+        return Response.ok().build();
+    }
+
+    @PATCH
+    @Path("/{id}")
+    public Response modify(Long id, ${entity.name}Dto entity) {
+        service.modify(id, entity);
         return Response.ok().build();
     }
 
@@ -54,4 +65,49 @@ public class ${entity.name}Resource {
     public Long count() {
         return service.count();
     }
+    <#list entity.relations?filter(r -> r.type == 'MANY_TO_ONE' || r.type == 'ONE_TO_ONE') as relation>
+
+    <#assign relDtoType = relation.targetEntity.name + "Dto">
+    <#assign relResource = relation.targetEntity.resourcePath>
+    @GET
+    @Path("/{id}/${relResource}")
+    public ${relDtoType} get${relation.name?cap_first}(Long id) {
+        return service.get${relation.name?cap_first}(id)
+                .orElseThrow(NotFoundException::new);
+    }
+
+    @PUT
+    @Path("/{id}/${relResource}/{${relation.name}Id}")
+    public void set${relation.name?cap_first}(Long id, Long ${relation.name}Id) {
+        service.set${relation.name?cap_first}(id, ${relation.name}Id);
+    }
+
+    @DELETE
+    @Path("/{id}/${relResource}/{${relation.name}Id}")
+    public void unset${relation.name?cap_first}(Long id, Long ${relation.name}Id) {
+        service.unset${relation.name?cap_first}(id, ${relation.name}Id);
+    }
+    </#list>
+    <#list entity.relations?filter(r -> r.type == 'MANY_TO_MANY' || r.type == 'ONE_TO_MANY') as relation>
+
+    <#assign relDtoType = relation.targetEntity.name + "Dto">
+    <#assign relResource = relation.targetEntity.resourcePath>
+    @GET
+    @Path("/{id}/${relResource}s")
+    public List<${relDtoType}> get${relation.name?cap_first}(Long id) {
+        return service.get${relation.name?cap_first}(id);
+    }
+
+    @PUT
+    @Path("/{id}/${relResource}s/{${relation.name}Id}")
+    public void add${relation.name?cap_first}(Long id, Long ${relation.name}Id) {
+        service.add${relation.name?cap_first}(id, ${relation.name}Id);
+    }
+
+    @DELETE
+    @Path("/{id}/${relResource}s/{${relation.name}Id}")
+    public void remove${relation.name?cap_first}(Long id, Long ${relation.name}Id) {
+        service.remove${relation.name?cap_first}(id, ${relation.name}Id);
+    }
+    </#list>
 }

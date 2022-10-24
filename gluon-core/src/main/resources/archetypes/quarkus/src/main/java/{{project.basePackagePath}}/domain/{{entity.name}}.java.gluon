@@ -32,17 +32,16 @@ public class ${entity.name} extends PanacheEntityBase {
     </#list>
     <#list entity.relations as relation>
     
-    // TODO fetch type eager is required for now, correct handling of relation is needed
     <#if relation.type == 'MANY_TO_ONE'>
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "${relation.joinColumn}"<#if !relation.nullable>, nullable = false</#if><#if relation.unique>, unique = true</#if>)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "${relation.joinColumn}")
     public ${relation.targetEntity.name} ${relation.name};
     <#elseif relation.type == 'ONE_TO_ONE'>
-    @OneToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "${relation.joinColumn}"<#if !relation.nullable>, nullable = false</#if><#if relation.unique>, unique = true</#if>)
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "${relation.joinColumn}")
     public ${relation.targetEntity.name} ${relation.name};
     <#elseif relation.type == 'MANY_TO_MANY'>
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "${entity.table}_${relation.targetEntity.table}",
                joinColumns = @JoinColumn(name = "${entity.table}_id", referencedColumnName = "id"),
                inverseJoinColumns = @JoinColumn(name = "${relation.joinColumn}", referencedColumnName = "id"))

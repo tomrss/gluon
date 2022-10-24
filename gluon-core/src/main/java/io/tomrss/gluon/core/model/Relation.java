@@ -9,8 +9,6 @@ public class Relation {
     String inverseJoinColumn;
     String joinTable;
     String foreignKeyName;
-    boolean nullable;
-    boolean unique;
 
     Relation() {
     }
@@ -43,11 +41,4 @@ public class Relation {
         return foreignKeyName;
     }
 
-    public boolean isNullable() {
-        return nullable;
-    }
-
-    public boolean isUnique() {
-        return unique;
-    }
 }

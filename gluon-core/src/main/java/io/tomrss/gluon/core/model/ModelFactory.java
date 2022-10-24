@@ -122,8 +122,6 @@ public class ModelFactory {
         // TODO should be 2 different enums
         relation.type = relationSpec.type();
         relation.foreignKeyName = physicalNamingStrategy.foreignKey(relationSpec.name());
-        relation.nullable = relationSpec.nullable();
-        relation.unique = relationSpec.unique();
         return relation;
     }
 

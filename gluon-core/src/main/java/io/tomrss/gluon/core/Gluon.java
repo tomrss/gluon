@@ -27,15 +27,6 @@ import static io.tomrss.gluon.core.template.impl.StringTemplateImpl.ENTITY_TEMPL
 
 public class Gluon {
 
-    public static final List<String> RAW_FILES_RESOURCES = List.of(
-            ".gitignore",
-            ".dockerignore",
-            "mvnw",
-            "mvnw.cmd",
-            ".mvn/wrapper/maven-wrapper.properties",
-            ".mvn/wrapper/maven-wrapper.jar",
-            ".mvn/wrapper/MavenWrapperDownloader.java"
-    );
     public static final String RAW_BASE_PATH = "raw/";
     public static final String RAW_METADATA_FILENAME = "raw-metadata.txt";
 
@@ -111,7 +102,7 @@ public class Gluon {
             mkdirs(target);
             ResourceUtils.extractResource(rawPackage + rawFileResource, target);
         }
-        LOG.info("Extracted {} raw files.", RAW_FILES_RESOURCES.size());
+        LOG.info("Extracted {} raw files.", rawFilesResources.size());
     }
 
     private void generateSources(TemplateModel templateModel) throws IOException {

@@ -6,10 +6,10 @@ import io.tomrss.gluon.core.util.ResourceUtils;
 import java.io.IOException;
 import java.util.List;
 
-public class GluonArchetypeTemplateManager extends FreemarkerTemplateManager {
+import static io.tomrss.gluon.core.util.Constants.ARCHETYPE_BASE_PATH;
+import static io.tomrss.gluon.core.util.Constants.ARCHETYPE_METADATA_FILENAME;
 
-    public static final String ARCHETYPE_BASE_PATH = "archetypes/";
-    public static final String ARCHETYPE_METADATA_FILENAME = "archetype-metadata.txt";
+public class GluonArchetypeTemplateManager extends FreemarkerTemplateManager {
 
     private final ClassLoader classLoader;
     private final String archetypeName;

@@ -24,14 +24,12 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static io.tomrss.gluon.core.template.impl.StringTemplateImpl.ENTITY_TEMPLATE_PATTERN;
+import static io.tomrss.gluon.core.util.Constants.RAW_BASE_PATH;
+import static io.tomrss.gluon.core.util.Constants.RAW_METADATA_FILENAME;
 
 public class Gluon {
 
-    public static final String RAW_BASE_PATH = "raw/";
-    public static final String RAW_METADATA_FILENAME = "raw-metadata.txt";
-
     private static final Logger LOG = LoggerFactory.getLogger(Gluon.class);
-
     private static final Predicate<String> IS_ENTITY_TEMPLATE = path -> ENTITY_TEMPLATE_PATTERN.matcher(path).find();
 
     private final TemplateManager templateManager;

@@ -2,7 +2,7 @@ package io.tomrss.gluon.core.template.impl;
 
 import io.tomrss.gluon.core.template.GluonTemplateException;
 import io.tomrss.gluon.core.template.StringTemplate;
-import io.tomrss.gluon.core.util.CaseUtils;
+import io.tomrss.gluon.core.util.WordUtils;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
@@ -81,7 +81,7 @@ public class StringTemplateImpl implements StringTemplate {
     }
 
     private Object tryGetByOldSchoolGetterMethod(Object model, String property) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
-        final String getterName = "get" + CaseUtils.capitalize(property);
+        final String getterName = "get" + WordUtils.capitalize(property);
         return model.getClass()
                 .getMethod(getterName)
                 .invoke(model);

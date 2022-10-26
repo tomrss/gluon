@@ -162,7 +162,7 @@ public class Gluon {
     /**
      * Extract raw files for current project type into project directory.
      * <p>
-     * Raw files are stored in jar resources for every project type and loaded
+     * Raw files are stored in classpath resources for every project type and loaded
      * by looking at a metadata file.
      *
      * @throws IOException error reading resources or writing to file

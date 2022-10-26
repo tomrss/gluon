@@ -6,22 +6,23 @@ import io.tomrss.gluon.core.spec.impl.JacksonEntitySpecLoader;
 import io.tomrss.gluon.core.template.TemplateManager;
 import io.tomrss.gluon.core.template.impl.FileFreemarkerTemplateManager;
 import io.tomrss.gluon.core.template.impl.GluonArchetypeTemplateManager;
-import io.tomrss.gluon.core.util.CaseUtils;
 import io.tomrss.gluon.core.util.ResourceUtils;
+import io.tomrss.gluon.core.util.WordUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-@SuppressWarnings("java:S1192") // I like to duplicate string literals for the sake of readability
+/**
+ * Builder of Gluon instances.
+ *
+ * @author Tommaso Rossi
+ */
 public class GluonBuilder {
 
     private static final Logger LOG = LoggerFactory.getLogger(GluonBuilder.class);
@@ -53,102 +54,233 @@ public class GluonBuilder {
     private DatabaseVendor databaseVendor;
     private String templateExtension;
     private List<EntitySpec> mockEntities;
+    private final Map<String, Object> customProperties = new HashMap<>();
 
+    /**
+     * Set template manager.
+     * <p>
+     * Only one of template manager, archetype or custom templates can be specified.
+     *
+     * @param templateManager template manager
+     * @return this
+     */
     public GluonBuilder templateManager(TemplateManager templateManager) {
         this.templateManager = templateManager;
         return this;
     }
 
+    /**
+     * Set project type.
+     *
+     * @param projectType project type
+     * @return this
+     */
     public GluonBuilder projectType(ProjectType projectType) {
         this.projectType = projectType;
         return this;
     }
 
+    /**
+     * Set project type.
+     *
+     * @param projectType project type
+     * @return this
+     * @see ProjectType
+     */
     public GluonBuilder projectType(String projectType) {
         this.projectType = ProjectType.from(projectType);
         return this;
     }
 
+    /**
+     * Set directory of custom templates.
+     * <p>
+     * Only one of template manager, archetype or custom templates can be specified.
+     *
+     * @param customTemplatesDirectory directory of custom templates
+     * @return this
+     */
     public GluonBuilder customTemplatesDirectory(Path customTemplatesDirectory) {
         this.customTemplatesDirectory = customTemplatesDirectory;
         return this;
     }
 
+    /**
+     * Set directory of the project.
+     *
+     * @param projectDirectory directory of the project
+     * @return this
+     */
     public GluonBuilder projectDirectory(Path projectDirectory) {
         this.projectDirectory = projectDirectory;
         return this;
     }
 
+    /**
+     * Set directory containing entity specifications.
+     *
+     * @param entityDirectory entity directory
+     * @return this
+     */
     public GluonBuilder entityDirectory(Path entityDirectory) {
         this.entityDirectory = entityDirectory;
         return this;
     }
 
+    /**
+     * Set format of entity specifications.
+     *
+     * @param entityFormat entity format
+     * @return this
+     */
     public GluonBuilder entityFormat(SpecFormat entityFormat) {
         this.entityFormat = entityFormat;
         return this;
     }
 
+    /**
+     * Set format of entity specifications.
+     *
+     * @param entityFormat entity format
+     * @return this
+     */
     public GluonBuilder entityFormat(String entityFormat) {
         this.entityFormat = SpecFormat.from(entityFormat);
         return this;
     }
 
+    /**
+     * Set archetype for project creation.
+     * <p>
+     * Archetype is a set of default templates.
+     * <p>
+     * Only one of template manager, archetype or custom templates can be specified.
+     *
+     * @param archetype name of archetype
+     * @return this
+     */
     public GluonBuilder archetype(String archetype) {
         this.archetype = archetype;
         return this;
     }
 
+    /**
+     * Set group id of project.
+     *
+     * @param groupId group id
+     * @return this
+     */
     public GluonBuilder groupId(String groupId) {
         this.groupId = groupId;
         return this;
     }
 
+    /**
+     * Set artifact id of project, that is the project name.
+     *
+     * @param artifactId artifact id
+     * @return this
+     */
     public GluonBuilder artifactId(String artifactId) {
         this.artifactId = artifactId;
         return this;
     }
 
+    /**
+     * Set version of project.
+     *
+     * @param version version
+     * @return this
+     */
     public GluonBuilder version(String version) {
         this.version = version;
         return this;
     }
 
+    /**
+     * Set friendly name of project.
+     *
+     * @param friendlyName friendly name
+     * @return this
+     */
     public GluonBuilder friendlyName(String friendlyName) {
         this.friendlyName = friendlyName;
         return this;
     }
 
+    /**
+     * Set description of project.
+     *
+     * @param description description
+     * @return this
+     */
     public GluonBuilder description(String description) {
         this.description = description;
         return this;
     }
 
+    /**
+     * Set base package of the project.
+     *
+     * @param basePackage base package
+     * @return this
+     */
     public GluonBuilder basePackage(String basePackage) {
         this.basePackage = basePackage;
         return this;
     }
 
+    /**
+     * Set image registry used in the project.
+     *
+     * @param imageRegistry image registry
+     * @return this
+     */
+    // TODO completely useless. replace with generic custom properties
     public GluonBuilder imageRegistry(String imageRegistry) {
         this.imageRegistry = imageRegistry;
         return this;
     }
 
+    /**
+     * Set vendor of application database of the project.
+     *
+     * @param databaseVendor database vendor
+     * @return this
+     */
     public GluonBuilder databaseVendor(DatabaseVendor databaseVendor) {
         this.databaseVendor = databaseVendor;
         return this;
     }
 
+    /**
+     * Set extension of template files.
+     *
+     * @param templateExtension template extension
+     * @return this
+     */
     public GluonBuilder templateExtension(String templateExtension) {
         this.templateExtension = templateExtension;
         return this;
     }
 
+    /**
+     * Set mock entities.
+     *
+     * @param mockEntities mock entities
+     * @return this
+     */
     public GluonBuilder mockEntities(List<EntitySpec> mockEntities) {
         this.mockEntities = mockEntities;
         return this;
     }
 
+    /**
+     * Create Gluon instance.
+     *
+     * @return this
+     * @throws GluonInitException when Gluon instance cannot be created
+     */
     public Gluon createGluon() {
         try {
             validateBuild();
@@ -236,7 +368,7 @@ public class GluonBuilder {
             LOG.debug("No project directory specified, using artifactId as relative path: {}", projectDirectory.toAbsolutePath());
         }
         if (friendlyName == null) {
-            friendlyName = CaseUtils.hyphenSeparatedToDescriptive(artifactId);
+            friendlyName = WordUtils.hyphenatedToDescriptive(artifactId);
             LOG.debug("No friendly name specified, using default parsed from artifact id: {}", friendlyName);
         }
         if (basePackage == null) {
@@ -264,6 +396,9 @@ public class GluonBuilder {
         return Collections::emptyList;
     }
 
+    /**
+     * Exception representing a problem in initializing Gluon.
+     */
     public static class GluonInitException extends RuntimeException {
         public GluonInitException() {
         }

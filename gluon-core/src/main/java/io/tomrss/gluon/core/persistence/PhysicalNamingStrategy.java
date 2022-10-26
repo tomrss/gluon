@@ -1,6 +1,6 @@
 package io.tomrss.gluon.core.persistence;
 
-import io.tomrss.gluon.core.util.CaseUtils;
+import io.tomrss.gluon.core.util.WordUtils;
 
 public interface PhysicalNamingStrategy {
 
@@ -25,6 +25,6 @@ public interface PhysicalNamingStrategy {
     String joinColumn(String relationName);
 
     default String resourcePath(String entityName) {
-        return CaseUtils.toHyphenSeparated(entityName);
+        return WordUtils.camelCaseToHyphenated(entityName);
     }
 }

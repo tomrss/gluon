@@ -1,13 +1,13 @@
 package io.tomrss.gluon.core.persistence.impl;
 
 import io.tomrss.gluon.core.persistence.PhysicalNamingStrategy;
-import io.tomrss.gluon.core.util.CaseUtils;
+import io.tomrss.gluon.core.util.WordUtils;
 
 public class SnakeCaseNamingStrategy implements PhysicalNamingStrategy {
 
     @Override
     public String table(String entityName) {
-        return CaseUtils.toSnakeCase(entityName);
+        return WordUtils.camelCaseToSnakeCase(entityName);
     }
 
     @Override
@@ -27,12 +27,12 @@ public class SnakeCaseNamingStrategy implements PhysicalNamingStrategy {
 
     @Override
     public String column(String fieldName) {
-        return CaseUtils.toSnakeCase(fieldName);
+        return WordUtils.camelCaseToSnakeCase(fieldName);
     }
 
     @Override
     public String foreignKey(String relationName) {
-        return CaseUtils.toSnakeCase(relationName) + "_fk";
+        return WordUtils.camelCaseToSnakeCase(relationName) + "_fk";
     }
 
     @Override
@@ -52,6 +52,6 @@ public class SnakeCaseNamingStrategy implements PhysicalNamingStrategy {
 
     @Override
     public String joinColumn(String relationName) {
-        return CaseUtils.toSnakeCase(relationName) + "_id";
+        return WordUtils.camelCaseToSnakeCase(relationName) + "_id";
     }
 }

@@ -27,6 +27,11 @@ import static io.tomrss.gluon.core.template.impl.StringTemplateImpl.ENTITY_TEMPL
 import static io.tomrss.gluon.core.util.Constants.RAW_BASE_PATH;
 import static io.tomrss.gluon.core.util.Constants.RAW_METADATA_FILENAME;
 
+/**
+ * Gluon is a scaffolding tool for domain-driven applications based on templates.
+ *
+ * @author Tommaso Rossi
+ */
 public class Gluon {
 
     private static final Logger LOG = LoggerFactory.getLogger(Gluon.class);
@@ -56,14 +61,14 @@ public class Gluon {
         this.stringTemplate = new StringTemplateImpl();
     }
 
-    public void generateProject() throws IOException {
-        LOG.info("Generating project {} in directory {} ...", projectSpec.artifactId(), projectDirectory.toAbsolutePath());
+    public void createProject() throws IOException {
+        LOG.info("Creating project {} in directory {} ...", projectSpec.artifactId(), projectDirectory.toAbsolutePath());
         checkProjectDirectory();
         final List<EntitySpec> entitySpecs = loadEntities();
         final TemplateModel templateModel = initTemplateModel(entitySpecs);
         extractRawFiles();
         generateSources(templateModel);
-        LOG.info("Project {} generated.", projectSpec.artifactId());
+        LOG.info("Project {} created.", projectSpec.artifactId());
     }
 
     private TemplateModel initTemplateModel(List<EntitySpec> entitySpecs) {

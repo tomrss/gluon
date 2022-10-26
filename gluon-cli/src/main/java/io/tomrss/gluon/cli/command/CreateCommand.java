@@ -80,7 +80,7 @@ public class CreateCommand implements Callable<Integer> {
             Optional.ofNullable(archetype).ifPresent(gluonBuilder::archetype);
             Optional.ofNullable(projectType).ifPresent(gluonBuilder::projectType);
 
-            gluonBuilder.createGluon().generateProject();
+            gluonBuilder.createGluon().createProject();
             return 0;
         } catch (Exception e) {
             if (LOG.isDebugEnabled()) {

@@ -75,7 +75,7 @@ public class CreateProjectMojo extends AbstractMojo {
             Optional.ofNullable(archetype).ifPresent(gluonBuilder::archetype);
             Optional.ofNullable(projectType).ifPresent(gluonBuilder::projectType);
 
-            gluonBuilder.createGluon().generateProject();
+            gluonBuilder.createGluon().createProject();
         } catch (Exception e) {
             throw new MojoExecutionException("Unable to generate project", e);
         }

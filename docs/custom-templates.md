@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Maven plugin
+title: Custom templates
 nav_order: 6
 ---
 # Writing custom templates

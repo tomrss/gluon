@@ -37,9 +37,6 @@ public class CreateProjectMojo extends AbstractMojo {
     @Parameter(property = "projectDirectory")
     private String projectDirectory;
 
-    @Parameter(property = "imageRegistry")
-    private String imageRegistry;
-
     @Parameter(property = "databaseVendor")
     private String databaseVendor;
 
@@ -68,7 +65,6 @@ public class CreateProjectMojo extends AbstractMojo {
             Optional.ofNullable(projectFriendlyName).ifPresent(gluonBuilder::friendlyName);
             Optional.ofNullable(projectDescription).ifPresent(gluonBuilder::description);
             Optional.ofNullable(basePackage).ifPresent(gluonBuilder::basePackage);
-            Optional.ofNullable(imageRegistry).ifPresent(gluonBuilder::imageRegistry);
             Optional.ofNullable(databaseVendor).map(DatabaseVendor::valueOf).ifPresent(gluonBuilder::databaseVendor);
             Optional.ofNullable(templateExtension).ifPresent(gluonBuilder::templateExtension);
             Optional.ofNullable(entities).map(Paths::get).ifPresent(gluonBuilder::entityDirectory);

@@ -14,7 +14,10 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
@@ -50,11 +53,9 @@ public class GluonBuilder {
     private String friendlyName;
     private String description;
     private String basePackage;
-    private String imageRegistry;
     private DatabaseVendor databaseVendor;
     private String templateExtension;
     private List<EntitySpec> mockEntities;
-    private final Map<String, Object> customProperties = new HashMap<>();
 
     /**
      * Set template manager.
@@ -231,18 +232,6 @@ public class GluonBuilder {
     }
 
     /**
-     * Set image registry used in the project.
-     *
-     * @param imageRegistry image registry
-     * @return this
-     */
-    // TODO completely useless. replace with generic custom properties
-    public GluonBuilder imageRegistry(String imageRegistry) {
-        this.imageRegistry = imageRegistry;
-        return this;
-    }
-
-    /**
      * Set vendor of application database of the project.
      *
      * @param databaseVendor database vendor
@@ -295,7 +284,6 @@ public class GluonBuilder {
                             friendlyName,
                             description,
                             basePackage,
-                            imageRegistry,
                             databaseVendor),
                     templateExtension,
                     entitySpecLoader);

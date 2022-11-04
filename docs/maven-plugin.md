@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Maven plugin
-nav_order: 4
+nav_order: 3
 ---
 
 # Maven Plugin

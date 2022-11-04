@@ -36,7 +36,6 @@ public class ModelFactory {
         project.description = projectSpec.description();
         project.basePackage = projectSpec.basePackage();
         project.basePackagePath = Paths.get("", project.basePackage.split("\\.")).toString();
-        project.imageRegistry = projectSpec.imageRegistry();
         project.dbVendor = projectSpec.databaseVendor();
         project.gluonVersion = getClass().getPackage().getImplementationVersion();
         if (project.gluonVersion == null) {

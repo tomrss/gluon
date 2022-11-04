@@ -41,9 +41,6 @@ public class CreateCommand implements Callable<Integer> {
     @Option(names = {"-P", "--projectDirectory"}, description = "Directory of generated project, must be non-existing")
     private String projectDirectory;
 
-    @Option(names = {"-i", "--imageRegistry"}, description = "Image registry where to store project images")
-    private String imageRegistry;
-
     @Option(names = {"-d", "--databaseVendor"}, description = "Database vendor used in generated project")
     private String databaseVendor;
 
@@ -73,7 +70,6 @@ public class CreateCommand implements Callable<Integer> {
             Optional.ofNullable(projectFriendlyName).ifPresent(gluonBuilder::friendlyName);
             Optional.ofNullable(projectDescription).ifPresent(gluonBuilder::description);
             Optional.ofNullable(basePackage).ifPresent(gluonBuilder::basePackage);
-            Optional.ofNullable(imageRegistry).ifPresent(gluonBuilder::imageRegistry);
             Optional.ofNullable(databaseVendor).map(DatabaseVendor::valueOf).ifPresent(gluonBuilder::databaseVendor);
             Optional.ofNullable(templateExtension).ifPresent(gluonBuilder::templateExtension);
             Optional.ofNullable(entities).map(Paths::get).ifPresent(gluonBuilder::entityDirectory);

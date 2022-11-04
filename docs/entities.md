@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Defining domain entities
-nav_order: 2
+nav_order: 4
 has_children: true
 ---
 

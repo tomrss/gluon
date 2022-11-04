@@ -1,5 +1,5 @@
 image:
-  repository: <#if project.imageRegistry??>${project.imageRegistry}/</#if>${project.artifactId}
+  repository: ${project.artifactId}
   tag: ${project.version}
   pullPolicy: IfNotPresent
   pullSecrets: []

@@ -8,6 +8,39 @@
     <artifactId>gluon</artifactId>
     <packaging>pom</packaging>
     <version>0.1.0</version>
+
+    <description>Gluon - Scaffolding tool for domain-driven projects</description>
+    <url>https://github.com/tomrss/gluon</url>
+
+    <developers>
+        <developer>
+            <id>tomrss</id>
+            <name>Tommaso Rossi</name>
+            <organizationUrl>https://github.com/tomrss</organizationUrl>
+        </developer>
+    </developers>
+
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <scm>
+        <url>https://github.com/tomrss/gluon</url>
+        <connection>scm:git:git@github.com:tomrss/gluon.git</connection>
+        <developerConnection>scm:git:git@github.com:tomrss/gluon.git</developerConnection>
+        <tag>HEAD</tag>
+    </scm>
+
+    <issueManagement>
+        <system>GitHub</system>
+        <url>https://github.com/tomrss/gluon/issues</url>
+    </issueManagement>
+
+
     <modules>
         <module>gluon-core</module>
         <module>gluon-cli</module>

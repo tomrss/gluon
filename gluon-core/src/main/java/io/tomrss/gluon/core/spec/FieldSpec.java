@@ -2,7 +2,7 @@ package io.tomrss.gluon.core.spec;
 
 public record FieldSpec(
         String name,
-        Class<?> type,
+        Class<?> type, // TODO having class here and not string restricts only to Java!
         boolean nullable,
         boolean unique,
         int length

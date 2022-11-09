@@ -7,7 +7,7 @@ import picocli.CommandLine.*;
 
 @Command(
         name = "gluon",
-        version = "gluon command line interface v0.1.0",
+        version = "gluon v0.1.0",
         subcommands = {CreateCommand.class, HelpCommand.class},
         mixinStandardHelpOptions = true
 )

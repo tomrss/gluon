@@ -16,6 +16,7 @@
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <picocli.version>4.7.0</picocli.version>
     </properties>
 
     <dependencies>
@@ -27,7 +28,7 @@
         <dependency>
             <groupId>info.picocli</groupId>
             <artifactId>picocli</artifactId>
-            <version>4.6.3</version>
+            <version>${picocli.version}</version>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
@@ -38,35 +39,6 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>appassembler-maven-plugin</artifactId>
-                <version>1.10</version>
-                <executions>
-                    <execution>
-                        <id>assemble-script</id>
-                        <phase>package</phase>
-                        <goals><goal>assemble</goal></goals>
-                        <configuration>
-                            <assembleDirectory>${project.build.directory}/</assembleDirectory>
-                            <binFileExtensions>
-                                <unix>.sh</unix>
-                                <windows>.bat</windows>
-                            </binFileExtensions>
-                            <platforms>
-                                <platform>unix</platform>
-                                <platform>windows</platform>
-                            </platforms>
-                            <programs>
-                                <program>
-                                    <mainClass>io.tomrss.gluon.cli.GluonCommandLine</mainClass>
-                                    <id>gluon</id>
-                                </program>
-                            </programs>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.8.1</version>
@@ -75,13 +47,33 @@
                         <path>
                             <groupId>info.picocli</groupId>
                             <artifactId>picocli-codegen</artifactId>
-                            <version>4.6.3</version>
+                            <version>${picocli.version}</version>
                         </path>
                     </annotationProcessorPaths>
                     <compilerArgs>
                         <arg>-Aproject=${project.groupId}/${project.artifactId}</arg>
                     </compilerArgs>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.4.1</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>io.tomrss.gluon.cli.GluonCommandLine</mainClass>
+                                </transformer>
+                            </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

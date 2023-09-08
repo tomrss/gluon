@@ -93,19 +93,19 @@ public class ${entity.name}Resource {
     <#assign relDtoType = relation.targetEntity.name + "Dto">
     <#assign relResource = relation.targetEntity.resourcePath>
     @GET
-    @Path("/{id}/${relResource}s")
+    @Path("/{id}/${relResource}")
     public List<${relDtoType}> get${relation.name?cap_first}(Long id) {
         return service.get${relation.name?cap_first}(id);
     }
 
     @PUT
-    @Path("/{id}/${relResource}s/{${relation.name}Id}")
+    @Path("/{id}/${relResource}/{${relation.name}Id}")
     public void add${relation.name?cap_first}(Long id, Long ${relation.name}Id) {
         service.add${relation.name?cap_first}(id, ${relation.name}Id);
     }
 
     @DELETE
-    @Path("/{id}/${relResource}s/{${relation.name}Id}")
+    @Path("/{id}/${relResource}/{${relation.name}Id}")
     public void remove${relation.name?cap_first}(Long id, Long ${relation.name}Id) {
         service.remove${relation.name?cap_first}(id, ${relation.name}Id);
     }

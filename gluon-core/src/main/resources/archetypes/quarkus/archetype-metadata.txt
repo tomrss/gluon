@@ -4,6 +4,9 @@ src/main/docker/Dockerfile.jvm.gluon
 src/main/docker/Dockerfile.legacy-jar.gluon
 src/main/docker/Dockerfile.native.gluon
 src/main/docker/Dockerfile.native-micro.gluon
+src/main/java/{{project.basePackagePath}}/dto/{{entity.name}}Dto.java.gluon
+src/main/java/{{project.basePackagePath}}/mapper/EntityMapper.java.gluon
+src/main/java/{{project.basePackagePath}}/mapper/{{entity.name}}Mapper.java.gluon
 src/main/java/{{project.basePackagePath}}/resource/{{entity.name}}Resource.java.gluon
 src/main/java/{{project.basePackagePath}}/service/{{entity.name}}Service.java.gluon
 src/main/java/{{project.basePackagePath}}/domain/{{entity.name}}.java.gluon

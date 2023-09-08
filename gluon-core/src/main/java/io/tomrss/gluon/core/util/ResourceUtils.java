@@ -9,7 +9,7 @@ import java.util.Objects;
 /**
  * Utilities for classpath resource management.
  *
- * @author TOmmaso Rossi
+ * @author Tommaso Rossi
  */
 public class ResourceUtils {
     public static final ClassLoader CLASS_LOADER = Thread.currentThread().getContextClassLoader();
@@ -49,7 +49,7 @@ public class ResourceUtils {
                 return reader.lines()
                         .filter(Objects::nonNull)
                         .map(String::trim)
-                        .filter(line -> line.length() > 0)
+                        .filter(line -> !line.isEmpty())
                         .filter(line -> !line.startsWith(Constants.COMMENT_MARKER))
                         .toList();
             }
